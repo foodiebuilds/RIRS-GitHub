@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtualno okolje (python -m venv venv)
+venv/
+.venv/
+
+# Podatki za povezavo z bazo – se ne objavijo (vzorec je v .env.example)
+.env
+
+# Baza, ki jo Django ustvari, preden je nastavljen PostgreSQL
+db.sqlite3
+
+# Urejevalniki in operacijski sistem
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
