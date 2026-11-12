@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block naslov %}Voda in obroki{% endblock %}
+{% block vsebina %}
+<h1>Voda in obroki – danes</h1>
+
+<form method="post" action="{% url 'dodaj_vodo' %}">
+  {% csrf_token %}
+  <button type="submit">+250 ml</button>
+</form>
+
+<h2>Obrok</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ obrok_form.as_p }}
+  <button type="submit">Dodaj obrok</button>
+</form>
+
+<h2>Današnji vnosi</h2>
+<table>
+  {% for v in vnosi %}
+  <tr>
+    <td>{{ v.cas|time:"H:i" }}</td>
+    <td>{% if v.tip == "VODA" %}voda {{ v.kolicina|floatformat:0 }} ml{% else %}{{ v.opis }}, {{ v.kolicina|floatformat:0 }} kcal{% endif %}</td>
+  </tr>
+  {% empty %}
+  <tr><td>Danes še ni vnosov.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

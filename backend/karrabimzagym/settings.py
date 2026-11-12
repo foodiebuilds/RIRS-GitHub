@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "uporabniki",
     "dostop",
+    "vnosi",
 ]
 
 # Lasten model uporabnika, nastavljen pred prvo migracijo (docs/03).
