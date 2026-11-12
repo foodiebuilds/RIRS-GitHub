@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Misica(models.Model):
@@ -51,3 +53,26 @@ class VajaMisica(models.Model):
         verbose_name = "mišica vaje"
         verbose_name_plural = "mišice vaje"
         constraints = [models.UniqueConstraint(fields=["vaja", "misica"], name="vaja_misica_enkrat")]
+
+
+class Trening(models.Model):
+    """Dejansko opravljen trening (docs/03). Povezava na planirani trening se doda s plani (US-06)."""
+
+    uporabnik = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="treningi")
+    zacetek = models.DateTimeField(default=timezone.now)
+    trajanje_min = models.PositiveIntegerField()
+    porabljene_kcal = models.PositiveIntegerField()
+    opomba = models.CharField(max_length=200, blank=True)
+
+
+class Serija(models.Model):
+    """Ena serija vaje na treningu (docs/03)."""
+
+    trening = models.ForeignKey(Trening, on_delete=models.CASCADE, related_name="serije")
+    vaja = models.ForeignKey(Vaja, on_delete=models.PROTECT)
+    zaporedna_st = models.PositiveIntegerField()
+    ponovitve = models.PositiveIntegerField()
+    teza_kg = models.FloatField()
+
+    class Meta:
+        ordering = ["zaporedna_st"]

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block naslov %}Treningi{% endblock %}
+{% block vsebina %}
+<h1>Nov trening</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ serije_formset.management_form }}
+  {% if serije_formset.non_form_errors %}<p class="napaka">Vpiši vsaj eno serijo.</p>{% endif %}
+  <table>
+    <tr><th>Vaja</th><th>Ponovitve</th><th>Teža (kg)</th></tr>
+    {% for f in serije_formset %}
+    <tr>
+      <td>{{ f.vaja }}</td>
+      <td>{{ f.ponovitve }}</td>
+      <td>{{ f.teza_kg }}</td>
+      <td class="napaka">{% for napaka in f.errors.values %}{{ napaka.0 }} {% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {{ trening_form.as_p }}
+  <button type="submit">Shrani trening</button>
+</form>
+{% endblock %}
