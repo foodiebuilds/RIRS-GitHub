@@ -53,8 +53,61 @@ class PrijavaTest(TestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
 
 
+class RegistracijaTest(TestCase):
+    podatki = {
+        "ime": "Ana",
+        "username": "ana",
+        "email": "ana@primer.si",
+        "password1": "Mocno-Geslo-123",
+        "password2": "Mocno-Geslo-123",
+    }
+
+    def test_us01_ac1_registracija_ustvari_racun_sportnika(self):
+        odgovor = self.client.post("/registracija/", self.podatki)
+        self.assertRedirects(odgovor, "/prijava/")
+        u = Uporabnik.objects.get(username="ana")
+        self.assertEqual((u.ime, u.email), ("Ana", "ana@primer.si"))
+        self.assertFalse(u.is_staff)
+        self.assertTrue(u.check_password("Mocno-Geslo-123"))
+
+    def test_us01_ac1_registracija_zahteva_vsa_polja(self):
+        for polje in ("ime", "username", "email", "password1"):
+            odgovor = self.client.post("/registracija/", {**self.podatki, polje: ""})
+            self.assertIn(polje, odgovor.context["form"].errors)
+        self.assertFalse(Uporabnik.objects.exists())
+
+    def test_us01_ac2_zasedeno_uporabnisko_ime(self):
+        Uporabnik.objects.create_user("ana", "druga@primer.si", "Geslo-12345", ime="Ana")
+        odgovor = self.client.post("/registracija/", self.podatki)
+        self.assertEqual(list(odgovor.context["form"].errors), ["username"])
+        self.assertEqual(Uporabnik.objects.count(), 1)
+
+    def test_us01_ac2_zasedena_e_posta(self):
+        Uporabnik.objects.create_user("drugi", "ana@primer.si", "Geslo-12345", ime="Drugi")
+        odgovor = self.client.post("/registracija/", self.podatki)
+        self.assertEqual(list(odgovor.context["form"].errors), ["email"])
+        self.assertEqual(Uporabnik.objects.count(), 1)
+
+    def test_us01_ac3_nov_racun_se_lahko_prijavi(self):
+        self.client.post("/registracija/", self.podatki)
+        odgovor = self.client.post("/prijava/", {"username": "ana@primer.si", "password": "Mocno-Geslo-123"})
+        self.assertRedirects(odgovor, "/")
+
+
 class EpostaVelikeCrkeTest(TestCase):
     def test_us01_ac3_prijava_z_e_posto_ne_glede_na_velike_crke(self):
         Uporabnik.objects.create_user("ana", "ana@primer.si", "Geslo-12345", ime="Ana")
         odgovor = self.client.post("/prijava/", {"username": "Ana@Primer.si", "password": "Geslo-12345"})
         self.assertRedirects(odgovor, "/")
+
+    def test_us01_ac2_zasedena_e_posta_z_drugacnimi_velikimi_crkami(self):
+        Uporabnik.objects.create_user("drugi", "Ana@primer.si", "Geslo-12345", ime="Drugi")
+        podatki = {**RegistracijaTest.podatki, "email": "Ana@Primer.si"}
+        odgovor = self.client.post("/registracija/", podatki)
+        self.assertEqual(list(odgovor.context["form"].errors), ["email"])
+        self.assertEqual(Uporabnik.objects.count(), 1)
+
+    def test_us01_ac2_e_posta_je_enolicna_ne_glede_na_velike_crke(self):
+        Uporabnik.objects.create_user("ana", "ana@primer.si", "Geslo-12345", ime="Ana")
+        with self.assertRaises(IntegrityError):
+            Uporabnik.objects.create_user("ana2", "ANA@primer.si", "Geslo-12345", ime="Ana")

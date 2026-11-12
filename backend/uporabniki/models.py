@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.functions import Lower
 
 
 class Uporabnik(AbstractUser):
@@ -16,3 +17,11 @@ class Uporabnik(AbstractUser):
     )
 
     REQUIRED_FIELDS = ["email", "ime"]
+
+    class Meta(AbstractUser.Meta):
+        # Tudi računi iz admina in createsuperuser: ista e-pošta z drugimi velikimi črkami je zasedena (US-01 AC2).
+        constraints = [
+            models.UniqueConstraint(
+                Lower("email"), name="email_enolicen", violation_error_message="Uporabnik s tem e-naslovom že obstaja."
+            )
+        ]

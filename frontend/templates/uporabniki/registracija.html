@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block naslov %}Registracija{% endblock %}
+{% block vsebina %}
+<h1>Registracija</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Ustvari račun</button>
+</form>
+{% endblock %}

@@ -14,4 +14,5 @@ urlpatterns = [
         name="prijava",
     ),
     path("odjava/", auth_views.LogoutView.as_view(), name="odjava"),
+    path("registracija/", views.RegistracijaView.as_view(), name="registracija"),
 ]
