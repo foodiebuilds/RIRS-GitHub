@@ -1,8 +1,12 @@
+from datetime import datetime, time, timedelta
+
 from django.test import TestCase
+from django.utils import timezone
 
 from uporabniki.models import Uporabnik
 
 from .models import Misica, Serija, Trening, Vaja, VajaMisica
+from .zemljevid import obremenitev_misic
 
 
 def uporabnik(ime):
@@ -148,3 +152,53 @@ class KopirajTreningTest(TestCase):
     def test_tujega_treninga_ni_mogoce_kopirati(self):
         self.client.force_login(uporabnik("tomaz"))
         self.assertEqual(self.client.get(f"/treningi/kopiraj/{self.vzor.pk}/").status_code, 404)
+
+
+class ObremenitevMisicTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.prsa = Misica.objects.create(ime="prsa", pogled="SPREDAJ")
+        self.triceps = Misica.objects.create(ime="triceps", pogled="ZADAJ")
+        self.meca = Misica.objects.create(ime="meča", pogled="ZADAJ")
+        self.potisk = Vaja.objects.create(ime="Potisk s prsi na klopi")
+        VajaMisica.objects.create(vaja=self.potisk, misica=self.prsa, tip="GLAVNA")
+        VajaMisica.objects.create(vaja=self.potisk, misica=self.triceps, tip="POMOZNA")
+        self.danes = timezone.localdate()
+
+    def trening(self, vaja, st_serij, dan=None, kdo=None):
+        zacetek = timezone.make_aware(datetime.combine(dan or self.danes, time(10, 0)))
+        t = Trening.objects.create(uporabnik=kdo or self.ana, zacetek=zacetek, trajanje_min=60, porabljene_kcal=400)
+        for st in range(1, st_serij + 1):
+            Serija.objects.create(trening=t, vaja=vaja, zaporedna_st=st, ponovitve=8, teza_kg=60)
+
+    def obremenitev(self, od=None, do=None):
+        return obremenitev_misic(self.ana, od or self.danes - timedelta(days=6), do or self.danes)
+
+    def test_us03_ac2_primer_iz_zgodbe(self):
+        # 12 serij potiska: prsa 12 točk -> 10, triceps 6 točk -> 5
+        self.trening(self.potisk, 12)
+        o = self.obremenitev()
+        self.assertEqual((o[self.prsa], o[self.triceps]), (10, 5))
+
+    def test_us03_ac3_netrenirana_0_trenirana_vsaj_1(self):
+        meca_stoje = Vaja.objects.create(ime="Meča stoje")
+        VajaMisica.objects.create(vaja=meca_stoje, misica=self.meca, tip="POMOZNA")
+        self.trening(self.potisk, 30)
+        o = self.obremenitev()
+        self.assertEqual(o[self.meca], 0)
+        self.trening(meca_stoje, 1)  # 0,5 točke od 30 -> zaokroženo 0, a najmanj 1
+        self.assertEqual(self.obremenitev()[self.meca], 1)
+
+    def test_us03_ac4_samo_izbrano_obdobje_in_samo_svoji_treningi(self):
+        self.trening(self.potisk, 3, dan=self.danes - timedelta(days=7))  # izven zadnjih 7 dni
+        self.trening(self.potisk, 3, kdo=uporabnik("tomaz"))
+        self.assertEqual(self.obremenitev()[self.prsa], 0)
+        self.assertEqual(self.obremenitev(od=self.danes - timedelta(days=29))[self.prsa], 10)
+
+    def test_us03_ac5_brez_treningov_vse_0(self):
+        self.assertEqual(set(self.obremenitev().values()), {0})
+
+    def test_sprememba_misic_vaje_velja_tudi_za_pretekle_treninge(self):
+        self.trening(self.potisk, 2)
+        VajaMisica.objects.filter(misica=self.triceps).update(tip="GLAVNA")
+        self.assertEqual(self.obremenitev()[self.triceps], 10)
