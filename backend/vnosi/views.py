@@ -123,11 +123,24 @@ def casovnica(request):
         request,
         "vnosi/casovnica.html",
         {
+            "sportnik": request.user,
             "dnevi": dnevi_casovnice(request.user, VSI_PODATKI),
             "pocutje_form": PocutjeForm(uporabnik=request.user),
             "teza_form": TezaForm(),
         },
     )
+
+
+@login_required
+def casovnica_sportnika(request, sportnik_id):
+    """Časovnica športnika za trenerja ali svetovalca: samo vnosi, ki spadajo k njegovi vrsti dostopa."""
+    sportnik = get_object_or_404(Uporabnik, pk=sportnik_id)
+    if sportnik == request.user:
+        return redirect("casovnica")
+    vidni = vidni_podatki(request.user, sportnik)
+    if not vidni:
+        raise Http404
+    return render(request, "vnosi/casovnica.html", {"sportnik": sportnik, "dnevi": dnevi_casovnice(sportnik, vidni)})
 
 
 @login_required

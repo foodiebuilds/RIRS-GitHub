@@ -210,3 +210,47 @@ class CasovnicaTest(TestCase):
     def test_samo_svoji_vnosi(self):
         self.client.force_login(uporabnik("tomaz"))
         self.assertEqual(self.client.get("/casovnica/").context["dnevi"], [])
+
+
+class CasovnicaZaStrokovnjakaTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.tomaz = uporabnik("tomaz")
+        danes = timezone.localdate()
+        self.trening = Trening.objects.create(uporabnik=self.ana, zacetek=ob(danes, 18), trajanje_min=60, porabljene_kcal=400)
+        for tip, kolicina in [("VODA", 250), ("OBROK", 650), ("POCUTJE", 4), ("TEZA", 78)]:
+            Vnos.objects.create(uporabnik=self.ana, tip=tip, kolicina=kolicina, opis="kosilo" if tip == "OBROK" else "")
+        self.client.force_login(self.tomaz)
+
+    def dostop(self, vrsta, status="AKTIVEN"):
+        Dostop.objects.create(sportnik=self.ana, strokovnjak=self.tomaz, vrsta=vrsta, status=status)
+
+    def vidno(self):
+        odgovor = self.client.get(f"/casovnica/{self.ana.pk}/")
+        self.assertEqual(odgovor.status_code, 200)
+        postavke = [p for _, dan in odgovor.context["dnevi"] for p in dan]
+        return {("TRENING-kcal" if p["samo_kcal"] else "TRENING") if "trening" in p else p["vnos"].tip for p in postavke}
+
+    def test_us07_ac3_trener_vidi_treninge_pocutje_in_tezo(self):
+        self.dostop("TRENER")
+        self.assertEqual(self.vidno(), {"TRENING", "POCUTJE", "TEZA"})
+
+    def test_us07_ac3_svetovalec_vidi_vodo_obroke_pocutje_tezo_in_kcal_treningov(self):
+        self.dostop("PREHRANSKI_SVETOVALEC")
+        self.assertEqual(self.vidno(), {"TRENING-kcal", "VODA", "OBROK", "POCUTJE", "TEZA"})
+        odgovor = self.client.get(f"/casovnica/{self.ana.pk}/")
+        self.assertContains(odgovor, "porabljene kalorije: 400 kcal")
+        self.assertNotContains(odgovor, "60 min")
+
+    def test_brez_aktivnega_dostopa_404(self):
+        self.assertEqual(self.client.get(f"/casovnica/{self.ana.pk}/").status_code, 404)
+        self.dostop("TRENER", status="POVABLJEN")
+        self.assertEqual(self.client.get(f"/casovnica/{self.ana.pk}/").status_code, 404)
+
+    def test_strokovnjak_ne_vidi_obrazcev_za_vnos(self):
+        self.dostop("TRENER")
+        self.assertNotContains(self.client.get(f"/casovnica/{self.ana.pk}/"), "Zabeleži počutje")
+
+    def test_povezava_s_seznama_moji_sportniki(self):
+        self.dostop("TRENER")
+        self.assertContains(self.client.get("/moji-sportniki/"), f'href="/casovnica/{self.ana.pk}/"')

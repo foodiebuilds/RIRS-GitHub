@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block naslov %}Časovnica{% endblock %}
 {% block vsebina %}
-<h1>Časovnica</h1>
+<h1>Časovnica{% if sportnik != user %} – {{ sportnik.ime }}{% endif %}</h1>
 
+{% if sportnik == user %}
 <form method="post" action="{% url 'dodaj_pocutje' %}">
   {% csrf_token %}
   {{ pocutje_form.as_p }}
@@ -13,6 +14,7 @@
   {{ teza_form.as_p }}
   <button type="submit">Zabeleži težo</button>
 </form>
+{% endif %}
 
 {% for dan, postavke in dnevi %}
 <h2>{{ dan|date:"l, j. n. Y" }}</h2>

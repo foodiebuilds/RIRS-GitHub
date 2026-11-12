@@ -33,7 +33,7 @@
   <tr><th>Športnik</th><th>Vrsta dostopa</th><th>Pregled</th></tr>
   {% for s in sportniki %}
   <tr>
-    <td>{{ s.grouper.ime }} ({{ s.grouper.username }})</td>
+    <td><a href="{% url 'casovnica_sportnika' s.grouper.pk %}">{{ s.grouper.ime }} ({{ s.grouper.username }})</a></td>
     <td>{% for d in s.list %}{{ d.get_vrsta_display }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
     <td>{% for d in s.list %}{% if d.vrsta == "PREHRANSKI_SVETOVALEC" %}<a href="{% url 'prehrana_sportnika' s.grouper.pk %}">Prehrana</a>{% endif %}{% if d.vrsta == "TRENER" %} <a href="{% url 'zemljevid_misic_sportnika' s.grouper.pk %}">Statistika</a>{% endif %}{% endfor %}</td>
   </tr>
