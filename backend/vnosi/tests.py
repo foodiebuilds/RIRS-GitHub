@@ -177,3 +177,36 @@ class PocutjeInTezaTest(TestCase):
         v = Vnos.objects.get()
         self.assertEqual((v.tip, v.kolicina), ("TEZA", 78.5))
         self.assertContains(self.client.get("/casovnica/"), "teža 78,5 kg")
+
+
+def ob(dan, ura, minuta=0):
+    return timezone.make_aware(datetime.combine(dan, time(ura, minuta)))
+
+
+class CasovnicaTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.client.force_login(self.ana)
+        self.danes = timezone.localdate()
+        self.vceraj = self.danes - timedelta(days=1)
+        Trening.objects.create(uporabnik=self.ana, zacetek=ob(self.danes, 18), trajanje_min=60, porabljene_kcal=400)
+        Vnos.objects.create(uporabnik=self.ana, tip="VODA", kolicina=250, cas=ob(self.danes, 9))
+        Vnos.objects.create(uporabnik=self.ana, tip="OBROK", kolicina=650, opis="kosilo", cas=ob(self.danes, 13))
+        Vnos.objects.create(uporabnik=self.ana, tip="POCUTJE", kolicina=4, cas=ob(self.vceraj, 20))
+        Vnos.objects.create(uporabnik=self.ana, tip="TEZA", kolicina=78, cas=ob(self.vceraj, 7))
+
+    def test_us07_ac2_vsi_vnosi_po_dnevih_znotraj_dneva_po_casu(self):
+        dnevi = self.client.get("/casovnica/").context["dnevi"]
+        self.assertEqual([dan for dan, _ in dnevi], [self.danes, self.vceraj])
+        danes = [p.get("vnos", p.get("trening")) for p in dnevi[0][1]]
+        self.assertEqual([getattr(x, "tip", "TRENING") for x in danes], ["VODA", "OBROK", "TRENING"])
+        self.assertEqual([p["vnos"].tip for p in dnevi[1][1]], ["TEZA", "POCUTJE"])
+
+    def test_us07_ac2_prikaz(self):
+        odgovor = self.client.get("/casovnica/")
+        for besedilo in ["voda 250 ml", "obrok: kosilo, 650 kcal", "trening 60 min · 400 kcal", "počutje 4/5", "teža 78 kg"]:
+            self.assertContains(odgovor, besedilo)
+
+    def test_samo_svoji_vnosi(self):
+        self.client.force_login(uporabnik("tomaz"))
+        self.assertEqual(self.client.get("/casovnica/").context["dnevi"], [])

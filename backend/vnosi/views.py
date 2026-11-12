@@ -8,9 +8,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from dostop.pravice import vidni_podatki
+from dostop.pravice import VSI_PODATKI, vidni_podatki
 from uporabniki.models import Uporabnik
 
+from .casovnica import dnevi_casovnice
 from .forms import CiljForm, ObrokForm, PocutjeForm, TezaForm
 from .models import DnevniCilj, Vnos, cilj_za_dan
 
@@ -117,12 +118,15 @@ def nastavi_cilj(request):
 
 @login_required
 def casovnica(request):
-    """Časovnica: vnos počutja in teže ter seznam teh vnosov."""
-    vnosi = request.user.vnosi.filter(tip__in=[Vnos.Tip.POCUTJE, Vnos.Tip.TEZA]).order_by("-cas")
+    """Časovnica: vsi moji vnosi po dnevih ter vnos počutja in teže."""
     return render(
         request,
         "vnosi/casovnica.html",
-        {"vnosi": vnosi, "pocutje_form": PocutjeForm(uporabnik=request.user), "teza_form": TezaForm()},
+        {
+            "dnevi": dnevi_casovnice(request.user, VSI_PODATKI),
+            "pocutje_form": PocutjeForm(uporabnik=request.user),
+            "teza_form": TezaForm(),
+        },
     )
 
 

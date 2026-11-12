@@ -1,0 +1,11 @@
+{{ p.cas|time:"H:i" }} –
+{% if p.trening %}
+  {% if p.samo_kcal %}trening, porabljene kalorije: {{ p.trening.porabljene_kcal }} kcal
+  {% else %}trening {{ p.trening.trajanje_min }} min · {{ p.trening.porabljene_kcal }} kcal:
+    {% for s in p.trening.serije.all %}{{ s.vaja }} {{ s.ponovitve }} × {{ s.teza_kg|floatformat:"-1" }} kg{% if not forloop.last %}, {% endif %}{% endfor %}
+  {% endif %}
+{% elif p.vnos.tip == "VODA" %}voda {{ p.vnos.kolicina|floatformat:0 }} ml
+{% elif p.vnos.tip == "OBROK" %}obrok: {{ p.vnos.opis }}, {{ p.vnos.kolicina|floatformat:0 }} kcal
+{% elif p.vnos.tip == "POCUTJE" %}počutje {{ p.vnos.kolicina|floatformat:0 }}/5{% if p.vnos.trening %} (po treningu){% endif %}
+{% else %}teža {{ p.vnos.kolicina|floatformat:"-1" }} kg
+{% endif %}

@@ -14,9 +14,14 @@
   <button type="submit">Zabeleži težo</button>
 </form>
 
+{% for dan, postavke in dnevi %}
+<h2>{{ dan|date:"l, j. n. Y" }}</h2>
 <ul>
-  {% for v in vnosi %}
-  <li>{{ v.cas|date:"j. n. Y H:i" }} – {% if v.tip == "POCUTJE" %}počutje {{ v.kolicina|floatformat:0 }}/5{% if v.trening %} (po treningu){% endif %}{% else %}teža {{ v.kolicina|floatformat:"-1" }} kg{% endif %}</li>
+  {% for p in postavke %}
+  <li>{% include "vnosi/postavka.html" %}</li>
   {% endfor %}
 </ul>
+{% empty %}
+<p>Na časovnici še ni vnosov.</p>
+{% endfor %}
 {% endblock %}
