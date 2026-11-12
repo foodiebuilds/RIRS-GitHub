@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block naslov %}Moji športniki{% endblock %}
+{% block vsebina %}
+<h1>Moji športniki</h1>
+
+{% if povabila %}
+<h2>Nova povabila</h2>
+<table>
+  {% for d in povabila %}
+  <tr>
+    <td>{{ d.sportnik.ime }} ({{ d.sportnik.username }})</td>
+    <td>{{ d.get_vrsta_display }}</td>
+    <td>
+      <form method="post" action="{% url 'odgovori_na_povabilo' d.pk 'sprejmi' %}">
+        {% csrf_token %}
+        <button type="submit">Sprejmi</button>
+      </form>
+    </td>
+    <td>
+      <form method="post" action="{% url 'odgovori_na_povabilo' d.pk 'zavrni' %}">
+        {% csrf_token %}
+        <button type="submit">Zavrni</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<h2>Športniki, ki so mi dali dostop</h2>
+{% regroup aktivni by sportnik as sportniki %}
+<table>
+  <tr><th>Športnik</th><th>Vrsta dostopa</th></tr>
+  {% for s in sportniki %}
+  <tr>
+    <td>{{ s.grouper.ime }} ({{ s.grouper.username }})</td>
+    <td>{% for d in s.list %}{{ d.get_vrsta_display }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="2">Noben športnik ti še ni dal dostopa.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

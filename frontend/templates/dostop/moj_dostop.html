@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block naslov %}Dostop do mojih podatkov{% endblock %}
+{% block vsebina %}
+<h1>Dostop do mojih podatkov</h1>
+
+<h2>Povabi trenerja ali prehranskega svetovalca</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Pošlji povabilo</button>
+</form>
+
+<h2>Kdo ima dostop</h2>
+<table>
+  <tr><th>Uporabnik</th><th>Vrsta dostopa</th><th>Stanje</th><th></th></tr>
+  {% for d in dostopi %}
+  <tr>
+    <td>{{ d.strokovnjak.ime }} ({{ d.strokovnjak.username }})</td>
+    <td>{{ d.get_vrsta_display }}</td>
+    <td>{{ d.get_status_display }}</td>
+    <td>
+      <form method="post" action="{% url 'preklici_dostop' d.pk %}">
+        {% csrf_token %}
+        <button type="submit">Prekliči</button>
+      </form>
+    </td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="4">Nihče nima dostopa.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
