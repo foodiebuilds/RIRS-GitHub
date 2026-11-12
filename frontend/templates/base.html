@@ -9,6 +9,7 @@
   <nav>
     <a href="{% url 'domov' %}">KarRabimZaGym</a>
     {% if user.is_authenticated %}
+      <a href="{% url 'moj_dostop' %}">Dostop do mojih podatkov</a>
       {{ user.ime }}
       <form method="post" action="{% url 'odjava' %}">
         {% csrf_token %}
