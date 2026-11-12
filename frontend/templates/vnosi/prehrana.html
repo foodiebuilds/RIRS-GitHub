@@ -15,6 +15,18 @@
   <button type="submit">Dodaj obrok</button>
 </form>
 
+<h2>Dnevni cilj</h2>
+{% if cilj %}
+<p>Velja od {{ cilj.velja_od|date:"j. n. Y" }}: {{ cilj.kcal }} kcal, {{ cilj.voda_ml }} ml vode.</p>
+{% else %}
+<p>Cilj še ni nastavljen.</p>
+{% endif %}
+<form method="post" action="{% url 'nastavi_cilj' %}">
+  {% csrf_token %}
+  {{ cilj_form.as_p }}
+  <button type="submit">Nastavi cilj od danes</button>
+</form>
+
 <h2>Današnji vnosi</h2>
 <table>
   {% for v in vnosi %}
