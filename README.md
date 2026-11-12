@@ -54,10 +54,11 @@ Potrebni so Python 3.12 ali novejši, PostgreSQL 15 ali novejši in Git. Ukazi s
    copy .env.example .env
    ```
 
-5. Ustvari tabele in račun administratorja:
+5. Ustvari tabele, naloži začetne podatke (vaje in mišice) in ustvari račun administratorja:
 
    ```
    python manage.py migrate
+   python manage.py loaddata zacetni_podatki
    python manage.py createsuperuser
    ```
 
