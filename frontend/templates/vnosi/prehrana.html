@@ -2,6 +2,8 @@
 {% block naslov %}Voda in obroki{% endblock %}
 {% block vsebina %}
 <h1>Voda in obroki – danes</h1>
+<p>Voda: {{ danes.voda }}</p>
+<p>Kalorije: {{ danes.kcal }}</p>
 
 <form method="post" action="{% url 'dodaj_vodo' %}">
   {% csrf_token %}
@@ -36,6 +38,14 @@
   </tr>
   {% empty %}
   <tr><td>Danes še ni vnosov.</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Pretekli dnevi</h2>
+<table>
+  <tr><th>Dan</th><th>Voda</th><th>Kalorije</th></tr>
+  {% for d in pretekli_dnevi %}
+  <tr><td>{{ d.dan|date:"j. n." }}</td><td>{{ d.voda }}</td><td>{{ d.kcal }}</td></tr>
   {% endfor %}
 </table>
 {% endblock %}
