@@ -1,0 +1,799 @@
+[
+  {
+    "model": "treningi.misica",
+    "pk": 1,
+    "fields": {
+      "ime": "prsa",
+      "pogled": "SPREDAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 2,
+    "fields": {
+      "ime": "ramena",
+      "pogled": "SPREDAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 3,
+    "fields": {
+      "ime": "biceps",
+      "pogled": "SPREDAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 4,
+    "fields": {
+      "ime": "triceps",
+      "pogled": "ZADAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 5,
+    "fields": {
+      "ime": "podlakti",
+      "pogled": "SPREDAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 6,
+    "fields": {
+      "ime": "trebušne mišice",
+      "pogled": "SPREDAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 7,
+    "fields": {
+      "ime": "trapez",
+      "pogled": "ZADAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 8,
+    "fields": {
+      "ime": "hrbet",
+      "pogled": "ZADAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 9,
+    "fields": {
+      "ime": "spodnji hrbet",
+      "pogled": "ZADAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 10,
+    "fields": {
+      "ime": "zadnjica",
+      "pogled": "ZADAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 11,
+    "fields": {
+      "ime": "kvadriceps",
+      "pogled": "SPREDAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 12,
+    "fields": {
+      "ime": "zadnje stegenske mišice",
+      "pogled": "ZADAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 13,
+    "fields": {
+      "ime": "adduktorji",
+      "pogled": "SPREDAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 14,
+    "fields": {
+      "ime": "meča",
+      "pogled": "ZADAJ"
+    }
+  },
+  {
+    "model": "treningi.misica",
+    "pk": 15,
+    "fields": {
+      "ime": "golen",
+      "pogled": "SPREDAJ"
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 1,
+    "fields": {
+      "ime": "Potisk s prsi",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 2,
+    "fields": {
+      "ime": "Razpiranje z ročkami",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 3,
+    "fields": {
+      "ime": "Potisk s prsi na poševni klopi",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 4,
+    "fields": {
+      "ime": "Sklece",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 5,
+    "fields": {
+      "ime": "Potisk nad glavo",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 6,
+    "fields": {
+      "ime": "Odročenje z ročkami",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 7,
+    "fields": {
+      "ime": "Upogib s palico",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 8,
+    "fields": {
+      "ime": "Upogib komolcev z ročkami",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 9,
+    "fields": {
+      "ime": "Iztegovanje komolcev na škripcu",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 10,
+    "fields": {
+      "ime": "Zgib",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 11,
+    "fields": {
+      "ime": "Poteg škripca do prsi",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 12,
+    "fields": {
+      "ime": "Veslanje z drogom",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 13,
+    "fields": {
+      "ime": "Skomig z ročkami",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 14,
+    "fields": {
+      "ime": "Mrtvi dvig",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 15,
+    "fields": {
+      "ime": "Počep",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 16,
+    "fields": {
+      "ime": "Izpadni korak",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 17,
+    "fields": {
+      "ime": "Potisk z nogami",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 18,
+    "fields": {
+      "ime": "Dvig bokov",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 19,
+    "fields": {
+      "ime": "Upogib kolen leže",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 20,
+    "fields": {
+      "ime": "Primik nog na napravi",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 21,
+    "fields": {
+      "ime": "Meča stoje",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 22,
+    "fields": {
+      "ime": "Dvig prstov stopal",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 23,
+    "fields": {
+      "ime": "Trebušnjaki",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 24,
+    "fields": {
+      "ime": "Deska",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vaja",
+    "pk": 25,
+    "fields": {
+      "ime": "Upogib zapestij",
+      "opis": ""
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 1,
+    "fields": {
+      "vaja": 1,
+      "misica": 1,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 2,
+    "fields": {
+      "vaja": 1,
+      "misica": 4,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 3,
+    "fields": {
+      "vaja": 1,
+      "misica": 2,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 4,
+    "fields": {
+      "vaja": 2,
+      "misica": 1,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 5,
+    "fields": {
+      "vaja": 3,
+      "misica": 1,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 6,
+    "fields": {
+      "vaja": 3,
+      "misica": 2,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 7,
+    "fields": {
+      "vaja": 3,
+      "misica": 4,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 8,
+    "fields": {
+      "vaja": 4,
+      "misica": 1,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 9,
+    "fields": {
+      "vaja": 4,
+      "misica": 4,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 10,
+    "fields": {
+      "vaja": 4,
+      "misica": 2,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 11,
+    "fields": {
+      "vaja": 5,
+      "misica": 2,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 12,
+    "fields": {
+      "vaja": 5,
+      "misica": 4,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 13,
+    "fields": {
+      "vaja": 5,
+      "misica": 7,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 14,
+    "fields": {
+      "vaja": 6,
+      "misica": 2,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 15,
+    "fields": {
+      "vaja": 7,
+      "misica": 3,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 16,
+    "fields": {
+      "vaja": 8,
+      "misica": 3,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 17,
+    "fields": {
+      "vaja": 8,
+      "misica": 5,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 18,
+    "fields": {
+      "vaja": 9,
+      "misica": 4,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 19,
+    "fields": {
+      "vaja": 10,
+      "misica": 8,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 20,
+    "fields": {
+      "vaja": 10,
+      "misica": 3,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 21,
+    "fields": {
+      "vaja": 10,
+      "misica": 5,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 22,
+    "fields": {
+      "vaja": 11,
+      "misica": 8,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 23,
+    "fields": {
+      "vaja": 11,
+      "misica": 3,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 24,
+    "fields": {
+      "vaja": 12,
+      "misica": 8,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 25,
+    "fields": {
+      "vaja": 12,
+      "misica": 3,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 26,
+    "fields": {
+      "vaja": 12,
+      "misica": 7,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 27,
+    "fields": {
+      "vaja": 12,
+      "misica": 9,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 28,
+    "fields": {
+      "vaja": 13,
+      "misica": 7,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 29,
+    "fields": {
+      "vaja": 13,
+      "misica": 5,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 30,
+    "fields": {
+      "vaja": 14,
+      "misica": 9,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 31,
+    "fields": {
+      "vaja": 14,
+      "misica": 10,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 32,
+    "fields": {
+      "vaja": 14,
+      "misica": 12,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 33,
+    "fields": {
+      "vaja": 14,
+      "misica": 7,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 34,
+    "fields": {
+      "vaja": 14,
+      "misica": 5,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 35,
+    "fields": {
+      "vaja": 14,
+      "misica": 11,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 36,
+    "fields": {
+      "vaja": 15,
+      "misica": 11,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 37,
+    "fields": {
+      "vaja": 15,
+      "misica": 10,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 38,
+    "fields": {
+      "vaja": 15,
+      "misica": 12,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 39,
+    "fields": {
+      "vaja": 15,
+      "misica": 13,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 40,
+    "fields": {
+      "vaja": 16,
+      "misica": 11,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 41,
+    "fields": {
+      "vaja": 16,
+      "misica": 10,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 42,
+    "fields": {
+      "vaja": 17,
+      "misica": 11,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 43,
+    "fields": {
+      "vaja": 17,
+      "misica": 10,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 44,
+    "fields": {
+      "vaja": 18,
+      "misica": 10,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 45,
+    "fields": {
+      "vaja": 18,
+      "misica": 12,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 46,
+    "fields": {
+      "vaja": 19,
+      "misica": 12,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 47,
+    "fields": {
+      "vaja": 20,
+      "misica": 13,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 48,
+    "fields": {
+      "vaja": 21,
+      "misica": 14,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 49,
+    "fields": {
+      "vaja": 22,
+      "misica": 15,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 50,
+    "fields": {
+      "vaja": 23,
+      "misica": 6,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 51,
+    "fields": {
+      "vaja": 24,
+      "misica": 6,
+      "tip": "GLAVNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 52,
+    "fields": {
+      "vaja": 24,
+      "misica": 2,
+      "tip": "POMOZNA"
+    }
+  },
+  {
+    "model": "treningi.vajamisica",
+    "pk": 53,
+    "fields": {
+      "vaja": 25,
+      "misica": 5,
+      "tip": "GLAVNA"
+    }
+  }
+]

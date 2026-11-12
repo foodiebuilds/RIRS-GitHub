@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "uporabniki",
     "dostop",
     "vnosi",
+    "treningi",
 ]
 
 # Lasten model uporabnika, nastavljen pred prvo migracijo (docs/03).
