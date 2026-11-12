@@ -4,7 +4,8 @@
     "pk": 1,
     "fields": {
       "ime": "prsa",
-      "pogled": "SPREDAJ"
+      "pogled": "SPREDAJ",
+      "oznake": "chest-upper-left,chest-upper-right,chest-lower-left,chest-lower-right"
     }
   },
   {
@@ -12,7 +13,8 @@
     "pk": 2,
     "fields": {
       "ime": "ramena",
-      "pogled": "SPREDAJ"
+      "pogled": "SPREDAJ",
+      "oznake": "shoulder-front-left,shoulder-front-right,shoulder-side-left,shoulder-side-right,deltoid-rear-left,deltoid-rear-right"
     }
   },
   {
@@ -20,7 +22,8 @@
     "pk": 3,
     "fields": {
       "ime": "biceps",
-      "pogled": "SPREDAJ"
+      "pogled": "SPREDAJ",
+      "oznake": "biceps-left,biceps-right"
     }
   },
   {
@@ -28,7 +31,8 @@
     "pk": 4,
     "fields": {
       "ime": "triceps",
-      "pogled": "ZADAJ"
+      "pogled": "ZADAJ",
+      "oznake": "triceps-long-left,triceps-long-right,triceps-lateral-left,triceps-lateral-right"
     }
   },
   {
@@ -36,7 +40,8 @@
     "pk": 5,
     "fields": {
       "ime": "podlakti",
-      "pogled": "SPREDAJ"
+      "pogled": "SPREDAJ",
+      "oznake": "forearm-left,forearm-right,forearm-flexors-left,forearm-flexors-right,forearm-extensors-left,forearm-extensors-right"
     }
   },
   {
@@ -44,7 +49,8 @@
     "pk": 6,
     "fields": {
       "ime": "trebušne mišice",
-      "pogled": "SPREDAJ"
+      "pogled": "SPREDAJ",
+      "oznake": "abs-upper-left,abs-upper-right,abs-lower-left,abs-lower-right,obliques-left,obliques-right,serratus-anterior-left,serratus-anterior-right"
     }
   },
   {
@@ -52,7 +58,8 @@
     "pk": 7,
     "fields": {
       "ime": "trapez",
-      "pogled": "ZADAJ"
+      "pogled": "ZADAJ",
+      "oznake": "traps-upper-left,traps-upper-right,traps-mid-left,traps-mid-right,traps-lower-left,traps-lower-right"
     }
   },
   {
@@ -60,7 +67,8 @@
     "pk": 8,
     "fields": {
       "ime": "hrbet",
-      "pogled": "ZADAJ"
+      "pogled": "ZADAJ",
+      "oznake": "lats-upper-left,lats-upper-right,lats-mid-left,lats-mid-right,lats-lower-left,lats-lower-right"
     }
   },
   {
@@ -68,7 +76,8 @@
     "pk": 9,
     "fields": {
       "ime": "spodnji hrbet",
-      "pogled": "ZADAJ"
+      "pogled": "ZADAJ",
+      "oznake": "lower-back-erectors-left,lower-back-erectors-right,lower-back-ql-left,lower-back-ql-right"
     }
   },
   {
@@ -76,7 +85,8 @@
     "pk": 10,
     "fields": {
       "ime": "zadnjica",
-      "pogled": "ZADAJ"
+      "pogled": "ZADAJ",
+      "oznake": "gluteus-maximus-left,gluteus-maximus-right,gluteus-medius-left,gluteus-medius-right"
     }
   },
   {
@@ -84,7 +94,8 @@
     "pk": 11,
     "fields": {
       "ime": "kvadriceps",
-      "pogled": "SPREDAJ"
+      "pogled": "SPREDAJ",
+      "oznake": "quads-left,quads-right"
     }
   },
   {
@@ -92,7 +103,8 @@
     "pk": 12,
     "fields": {
       "ime": "zadnje stegenske mišice",
-      "pogled": "ZADAJ"
+      "pogled": "ZADAJ",
+      "oznake": "hamstrings-medial-left,hamstrings-medial-right,hamstrings-lateral-left,hamstrings-lateral-right"
     }
   },
   {
@@ -100,7 +112,8 @@
     "pk": 13,
     "fields": {
       "ime": "adduktorji",
-      "pogled": "SPREDAJ"
+      "pogled": "SPREDAJ",
+      "oznake": "adductors-left,adductors-right"
     }
   },
   {
@@ -108,7 +121,8 @@
     "pk": 14,
     "fields": {
       "ime": "meča",
-      "pogled": "ZADAJ"
+      "pogled": "ZADAJ",
+      "oznake": "calves-gastroc-medial-left,calves-gastroc-medial-right,calves-gastroc-lateral-left,calves-gastroc-lateral-right,calves-soleus-left,calves-soleus-right"
     }
   },
   {
@@ -116,7 +130,8 @@
     "pk": 15,
     "fields": {
       "ime": "golen",
-      "pogled": "SPREDAJ"
+      "pogled": "SPREDAJ",
+      "oznake": "tibialis-anterior-left,tibialis-anterior-right"
     }
   },
   {

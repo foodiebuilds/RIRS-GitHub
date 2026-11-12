@@ -19,3 +19,14 @@ class SerijaForm(forms.Form):
 # Prazne vrstice se ne shranijo; vsaj ena serija je obvezna.
 # Pri kopiranem treningu lahko serijo odstraniš s kljukico »Odstrani«.
 SerijaFormSet = forms.formset_factory(SerijaForm, extra=8, min_num=1, validate_min=True, can_delete=True)
+
+
+class ObdobjeForm(forms.Form):
+    od = forms.DateField(label="Od", widget=forms.DateInput(attrs={"type": "date"}))
+    do = forms.DateField(label="Do", widget=forms.DateInput(attrs={"type": "date"}))
+
+    def clean(self):
+        podatki = super().clean()
+        if podatki.get("od") and podatki.get("do") and podatki["od"] > podatki["do"]:
+            raise forms.ValidationError("Datum »od« mora biti pred datumom »do«.")
+        return podatki

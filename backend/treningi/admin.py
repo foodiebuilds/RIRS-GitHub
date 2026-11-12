@@ -15,4 +15,4 @@ class VajaAdmin(admin.ModelAdmin):
 
 @admin.register(Misica)
 class MisicaAdmin(admin.ModelAdmin):
-    list_display = ("ime", "pogled")
+    list_display = ("ime", "pogled", "oznake")

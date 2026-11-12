@@ -1,8 +1,15 @@
-from django.test import TestCase
+import re
+from datetime import datetime, time, timedelta
 
+from django.conf import settings
+from django.test import TestCase
+from django.utils import timezone
+
+from dostop.models import Dostop
 from uporabniki.models import Uporabnik
 
 from .models import Misica, Serija, Trening, Vaja, VajaMisica
+from .zemljevid import obremenitev_misic
 
 
 def uporabnik(ime):
@@ -148,3 +155,144 @@ class KopirajTreningTest(TestCase):
     def test_tujega_treninga_ni_mogoce_kopirati(self):
         self.client.force_login(uporabnik("tomaz"))
         self.assertEqual(self.client.get(f"/treningi/kopiraj/{self.vzor.pk}/").status_code, 404)
+
+
+class ObremenitevMisicTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.prsa = Misica.objects.create(ime="prsa", pogled="SPREDAJ")
+        self.triceps = Misica.objects.create(ime="triceps", pogled="ZADAJ")
+        self.meca = Misica.objects.create(ime="meča", pogled="ZADAJ")
+        self.potisk = Vaja.objects.create(ime="Potisk s prsi na klopi")
+        VajaMisica.objects.create(vaja=self.potisk, misica=self.prsa, tip="GLAVNA")
+        VajaMisica.objects.create(vaja=self.potisk, misica=self.triceps, tip="POMOZNA")
+        self.danes = timezone.localdate()
+
+    def trening(self, vaja, st_serij, dan=None, kdo=None):
+        zacetek = timezone.make_aware(datetime.combine(dan or self.danes, time(10, 0)))
+        t = Trening.objects.create(uporabnik=kdo or self.ana, zacetek=zacetek, trajanje_min=60, porabljene_kcal=400)
+        for st in range(1, st_serij + 1):
+            Serija.objects.create(trening=t, vaja=vaja, zaporedna_st=st, ponovitve=8, teza_kg=60)
+
+    def obremenitev(self, od=None, do=None):
+        return obremenitev_misic(self.ana, od or self.danes - timedelta(days=6), do or self.danes)
+
+    def test_us03_ac2_primer_iz_zgodbe(self):
+        # 12 serij potiska: prsa 12 točk -> 10, triceps 6 točk -> 5
+        self.trening(self.potisk, 12)
+        o = self.obremenitev()
+        self.assertEqual((o[self.prsa], o[self.triceps]), (10, 5))
+
+    def test_us03_ac3_netrenirana_0_trenirana_vsaj_1(self):
+        meca_stoje = Vaja.objects.create(ime="Meča stoje")
+        VajaMisica.objects.create(vaja=meca_stoje, misica=self.meca, tip="POMOZNA")
+        self.trening(self.potisk, 30)
+        o = self.obremenitev()
+        self.assertEqual(o[self.meca], 0)
+        self.trening(meca_stoje, 1)  # 0,5 točke od 30 -> zaokroženo 0, a najmanj 1
+        self.assertEqual(self.obremenitev()[self.meca], 1)
+
+    def test_us03_ac4_samo_izbrano_obdobje_in_samo_svoji_treningi(self):
+        self.trening(self.potisk, 3, dan=self.danes - timedelta(days=7))  # izven zadnjih 7 dni
+        self.trening(self.potisk, 3, kdo=uporabnik("tomaz"))
+        self.assertEqual(self.obremenitev()[self.prsa], 0)
+        self.assertEqual(self.obremenitev(od=self.danes - timedelta(days=29))[self.prsa], 10)
+
+    def test_us03_ac5_brez_treningov_vse_0(self):
+        self.assertEqual(set(self.obremenitev().values()), {0})
+
+    def test_sprememba_misic_vaje_velja_tudi_za_pretekle_treninge(self):
+        self.trening(self.potisk, 2)
+        VajaMisica.objects.filter(misica=self.triceps).update(tip="GLAVNA")
+        self.assertEqual(self.obremenitev()[self.triceps], 10)
+
+
+class ZemljevidMisicStranTest(TestCase):
+    fixtures = ["zacetni_podatki"]
+
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.client.force_login(self.ana)
+        self.danes = timezone.localdate()
+
+    def trening(self, ime_vaje, st_serij, dan):
+        zacetek = timezone.make_aware(datetime.combine(dan, time(10, 0)))
+        t = Trening.objects.create(uporabnik=self.ana, zacetek=zacetek, trajanje_min=60, porabljene_kcal=400)
+        vaja = Vaja.objects.get(ime=ime_vaje)
+        for st in range(1, st_serij + 1):
+            Serija.objects.create(trening=t, vaja=vaja, zaporedna_st=st, ponovitve=8, teza_kg=60)
+
+    def test_oznake_misic_obstajajo_v_knjiznici(self):
+        pot = settings.FRONTEND_DIR / "static/js/body-muscles/body-muscles.umd.min.js"
+        oznake_knjiznice = set(re.findall(r'id:"([a-z-]+)"', pot.read_text(encoding="utf-8")))
+        uporabljene = [o for m in Misica.objects.all() for o in m.oznake.split(",")]
+        self.assertEqual(len(uporabljene), len(set(uporabljene)))  # nobena oznaka ni v dveh skupinah
+        self.assertLessEqual(set(uporabljene), oznake_knjiznice)
+
+    def test_us03_ac1_stran_s_pogledom_spredaj_in_zadaj(self):
+        Misica.objects.filter(ime="prsa").update(oznake="chest-upper-left, chest-upper-right")  # presledek iz admina
+        self.trening("Potisk s prsi", 4, self.danes)
+        odgovor = self.client.get("/statistika/misice/")
+        self.assertContains(odgovor, 'id="spredaj"')
+        self.assertContains(odgovor, 'id="zadaj"')
+        stanje = odgovor.context["stanje"]
+        self.assertEqual(stanje["chest-upper-left"], {"intensity": 10, "selected": False})
+        self.assertEqual(stanje["chest-upper-right"]["intensity"], 10)
+        self.assertEqual(stanje["triceps-long-right"]["intensity"], 5)
+        self.assertNotIn("quads-left", stanje)  # netrenirana mišica ostane siva
+
+    def test_us03_ac3_netrenirane_so_nastete(self):
+        self.trening("Potisk s prsi", 4, self.danes)
+        odgovor = self.client.get("/statistika/misice/")
+        imena = [m.ime for m in odgovor.context["netrenirane"]]
+        self.assertIn("kvadriceps", imena)
+        self.assertNotIn("prsa", imena)
+        self.assertEqual([(m.ime, v) for m, v in odgovor.context["najbolj_obremenjene"]][0], ("prsa", 10))
+
+    def test_us03_ac4_privzeto_7_dni_lahko_30_ali_od_do(self):
+        self.trening("Počep", 3, self.danes - timedelta(days=10))
+        odgovor = self.client.get("/statistika/misice/")
+        self.assertEqual((odgovor.context["od"], odgovor.context["do"]), (self.danes - timedelta(days=6), self.danes))
+        self.assertNotIn("quads-left", odgovor.context["stanje"])
+        self.assertIn("quads-left", self.client.get("/statistika/misice/?dni=30").context["stanje"])
+        dan = self.danes - timedelta(days=10)
+        odgovor = self.client.get(f"/statistika/misice/?od={dan.isoformat()}&do={dan.isoformat()}")
+        self.assertEqual(odgovor.context["od"], dan)
+        self.assertIn("quads-left", odgovor.context["stanje"])
+
+    def test_napacno_obdobje_obdrzi_privzeto(self):
+        odgovor = self.client.get(f"/statistika/misice/?od={self.danes.isoformat()}&do={(self.danes - timedelta(days=3)).isoformat()}")
+        self.assertContains(odgovor, "mora biti pred datumom")
+        self.assertEqual(odgovor.context["od"], self.danes - timedelta(days=6))
+
+    def test_us03_ac5_brez_treningov_sporocilo(self):
+        odgovor = self.client.get("/statistika/misice/")
+        self.assertContains(odgovor, "V tem obdobju ni zabeleženih treningov")
+        self.assertEqual(odgovor.context["stanje"], {})
+
+
+class ZemljevidZaTreneraTest(TestCase):
+    fixtures = ["zacetni_podatki"]
+
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.tomaz = uporabnik("tomaz")
+        t = Trening.objects.create(uporabnik=self.ana, trajanje_min=60, porabljene_kcal=400)
+        Serija.objects.create(trening=t, vaja=Vaja.objects.get(ime="Počep"), zaporedna_st=1, ponovitve=8, teza_kg=80)
+        self.client.force_login(self.tomaz)
+        self.url = f"/statistika/misice/{self.ana.pk}/"
+
+    def dostop(self, vrsta):
+        Dostop.objects.create(sportnik=self.ana, strokovnjak=self.tomaz, vrsta=vrsta, status="AKTIVEN")
+
+    def test_us05_ac4_trener_vidi_statistiko_treningov(self):
+        self.dostop("TRENER")
+        odgovor = self.client.get(self.url)
+        self.assertEqual(odgovor.context["stanje"]["quads-left"]["intensity"], 10)
+        self.assertContains(odgovor, "zemljevid mišic – Ana")
+        self.assertContains(self.client.get("/moji-sportniki/"), f'href="{self.url}"')
+
+    def test_us05_ac4_svetovalec_in_brez_dostopa_ne_vidita(self):
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.dostop("PREHRANSKI_SVETOVALEC")
+        self.assertEqual(self.client.get(self.url).status_code, 404)

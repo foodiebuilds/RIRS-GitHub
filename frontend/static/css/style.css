@@ -4,3 +4,5 @@ nav form { margin: 0; }
 main { max-width: 900px; margin: 0 auto; padding: 16px; }
 .napaka { color: #b00020; }
 th, td { padding: 2px 8px; text-align: left; }
+.zemljevid { display: flex; gap: 24px; }
+.zemljevid > div { flex: 1; }
