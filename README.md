@@ -22,3 +22,51 @@ Spletna aplikacija za beleženje napredka v fitnesu in za sodelovanje s trenerje
 - [Uporabniške zgodbe](docs/05-uporabniske-zgodbe.md)
 - [Wireframes](docs/06-wireframes.md)
 - [Arhitekturne odločitve (ADR)](docs/adr/)
+
+## Lokalni zagon
+
+Potrebni so Python 3.12 ali novejši, PostgreSQL 15 ali novejši in Git. Ukazi so za Windows (cmd).
+
+1. Prenesi repozitorij in pojdi v mapo `backend`:
+
+   ```
+   git clone https://github.com/foodiebuilds/RIRS-GitHub.git
+   cd RIRS-GitHub\backend
+   ```
+
+2. Ustvari virtualno okolje in namesti pakete:
+
+   ```
+   python -m venv venv
+   venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. Ustvari bazo v PostgreSQL (pot do `psql.exe` je odvisna od nameščene različice):
+
+   ```
+   "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -c "CREATE DATABASE karrabimzagym;"
+   ```
+
+4. Kopiraj `.env.example` v `.env` in v `.env` vpiši geslo uporabnika `postgres` (`DB_PASSWORD`):
+
+   ```
+   copy .env.example .env
+   ```
+
+5. Ustvari tabele in račun administratorja:
+
+   ```
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
+
+6. Zaženi aplikacijo:
+
+   ```
+   python manage.py runserver
+   ```
+
+Aplikacija teče na `http://127.0.0.1:8000`, administracija na `http://127.0.0.1:8000/admin`.
+
+Testi: `python manage.py test` (v mapi `backend`, z aktivnim virtualnim okoljem).
