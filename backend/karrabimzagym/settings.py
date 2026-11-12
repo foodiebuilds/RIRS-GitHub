@@ -46,7 +46,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "uporabniki",
 ]
+
+# Lasten model uporabnika, nastavljen pred prvo migracijo (docs/03).
+AUTH_USER_MODEL = "uporabniki.Uporabnik"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

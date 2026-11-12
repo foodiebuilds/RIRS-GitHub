@@ -54,12 +54,19 @@ Potrebni so Python 3.12 ali novejši, PostgreSQL 15 ali novejši in Git. Ukazi s
    copy .env.example .env
    ```
 
-5. Zaženi aplikacijo:
+5. Ustvari tabele in račun administratorja:
+
+   ```
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
+
+6. Zaženi aplikacijo:
 
    ```
    python manage.py runserver
    ```
 
-Aplikacija teče na `http://127.0.0.1:8000`.
+Aplikacija teče na `http://127.0.0.1:8000`, administracija na `http://127.0.0.1:8000/admin`.
 
 Testi: `python manage.py test` (v mapi `backend`, z aktivnim virtualnim okoljem).
