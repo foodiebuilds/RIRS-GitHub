@@ -2,8 +2,12 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+
+from dostop.pravice import vidni_podatki
+from uporabniki.models import Uporabnik
 
 from .forms import ObdobjeForm, SerijaFormSet, TreningForm
 from .models import Serija, Trening
@@ -45,15 +49,23 @@ def treningi(request, kopiraj=None):
 
 
 @login_required
-def zemljevid_misic(request):
-    """Zemljevid obremenitve mišic za zadnjih 7 dni (privzeto), zadnjih 30 dni ali poljubno obdobje."""
+def zemljevid_misic(request, sportnik_id=None):
+    """Zemljevid obremenitve mišic za zadnjih 7 dni (privzeto), zadnjih 30 dni ali poljubno obdobje.
+
+    Brez sportnik_id za lastne treninge; s sportnik_id za trenerja športnika (statistika treningov, US-05 AC4).
+    """
+    sportnik = request.user
+    if sportnik_id is not None:
+        sportnik = get_object_or_404(Uporabnik, pk=sportnik_id)
+        if "treningi" not in vidni_podatki(request.user, sportnik):
+            raise Http404
     danes = timezone.localdate()
     dni = 30 if request.GET.get("dni") == "30" else 7
     od, do = danes - timedelta(days=dni - 1), danes
     obdobje_form = ObdobjeForm(request.GET if "od" in request.GET else None)
     if obdobje_form.is_valid():
         od, do = obdobje_form.cleaned_data["od"], obdobje_form.cleaned_data["do"]
-    obremenitev = obremenitev_misic(request.user, od, do)
+    obremenitev = obremenitev_misic(sportnik, od, do)
     # Stanje za knjižnico body-muscles: vsaka oznaka trenirane mišice dobi vrednost mišice.
     stanje = {
         oznaka: {"intensity": vrednost, "selected": False}
@@ -69,13 +81,14 @@ def zemljevid_misic(request):
         request,
         "treningi/zemljevid_misic.html",
         {
+            "sportnik": sportnik,
             "od": od,
             "do": do,
             "obdobje_form": obdobje_form,
             "stanje": stanje,
             "najbolj_obremenjene": trenirane[:5],
             "netrenirane": [m for m, v in obremenitev.items() if v == 0],
-            "ni_treningov": not request.user.treningi.filter(
+            "ni_treningov": not sportnik.treningi.filter(
                 zacetek__date__gte=od, zacetek__date__lte=do
             ).exists(),
         },

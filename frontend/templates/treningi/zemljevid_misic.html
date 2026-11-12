@@ -2,7 +2,7 @@
 {% load static %}
 {% block naslov %}Zemljevid mišic{% endblock %}
 {% block vsebina %}
-<h1>Statistika – zemljevid mišic</h1>
+<h1>Statistika – zemljevid mišic{% if sportnik != user %} – {{ sportnik.ime }}{% endif %}</h1>
 
 <p>
   <a href="?dni=7">7 dni</a> · <a href="?dni=30">30 dni</a>

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
+from dostop.models import Dostop
 from uporabniki.models import Uporabnik
 
 from .models import Misica, Serija, Trening, Vaja, VajaMisica
@@ -268,3 +269,30 @@ class ZemljevidMisicStranTest(TestCase):
         odgovor = self.client.get("/statistika/misice/")
         self.assertContains(odgovor, "V tem obdobju ni zabeleženih treningov")
         self.assertEqual(odgovor.context["stanje"], {})
+
+
+class ZemljevidZaTreneraTest(TestCase):
+    fixtures = ["zacetni_podatki"]
+
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.tomaz = uporabnik("tomaz")
+        t = Trening.objects.create(uporabnik=self.ana, trajanje_min=60, porabljene_kcal=400)
+        Serija.objects.create(trening=t, vaja=Vaja.objects.get(ime="Počep"), zaporedna_st=1, ponovitve=8, teza_kg=80)
+        self.client.force_login(self.tomaz)
+        self.url = f"/statistika/misice/{self.ana.pk}/"
+
+    def dostop(self, vrsta):
+        Dostop.objects.create(sportnik=self.ana, strokovnjak=self.tomaz, vrsta=vrsta, status="AKTIVEN")
+
+    def test_us05_ac4_trener_vidi_statistiko_treningov(self):
+        self.dostop("TRENER")
+        odgovor = self.client.get(self.url)
+        self.assertEqual(odgovor.context["stanje"]["quads-left"]["intensity"], 10)
+        self.assertContains(odgovor, "zemljevid mišic – Ana")
+        self.assertContains(self.client.get("/moji-sportniki/"), f'href="{self.url}"')
+
+    def test_us05_ac4_svetovalec_in_brez_dostopa_ne_vidita(self):
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.dostop("PREHRANSKI_SVETOVALEC")
+        self.assertEqual(self.client.get(self.url).status_code, 404)
