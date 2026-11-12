@@ -8,11 +8,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from dostop.pravice import vidni_podatki
+from dostop.pravice import VSI_PODATKI, vidni_podatki
+from treningi.models import Trening
 from uporabniki.models import Uporabnik
 
-from .forms import CiljForm, ObrokForm
-from .models import DnevniCilj, Vnos, cilj_za_dan
+from .casovnica import dnevi_casovnice, vidi_postavko
+from .forms import CiljForm, KomentarForm, ObrokForm, PocutjeForm, TezaForm
+from .models import DnevniCilj, Komentar, Vnos, cilj_za_dan
 
 VODA_GUMB_ML = 250
 PRETEKLI_DNEVI = 7
@@ -113,3 +115,74 @@ def nastavi_cilj(request):
                 status=DnevniCilj.Status.AKTIVEN,
             )
     return redirect("prehrana")
+
+
+@login_required
+def casovnica(request):
+    """Časovnica: vsi moji vnosi po dnevih ter vnos počutja in teže."""
+    return render(
+        request,
+        "vnosi/casovnica.html",
+        {
+            "sportnik": request.user,
+            "dnevi": dnevi_casovnice(request.user, VSI_PODATKI),
+            "pocutje_form": PocutjeForm(uporabnik=request.user),
+            "teza_form": TezaForm(),
+        },
+    )
+
+
+@login_required
+def casovnica_sportnika(request, sportnik_id):
+    """Časovnica športnika za trenerja ali svetovalca: samo vnosi, ki spadajo k njegovi vrsti dostopa."""
+    sportnik = get_object_or_404(Uporabnik, pk=sportnik_id)
+    if sportnik == request.user:
+        return redirect("casovnica")
+    vidni = vidni_podatki(request.user, sportnik)
+    if not vidni:
+        raise Http404
+    return render(request, "vnosi/casovnica.html", {"sportnik": sportnik, "dnevi": dnevi_casovnice(sportnik, vidni)})
+
+
+@login_required
+@require_POST
+def dodaj_pocutje(request):
+    form = PocutjeForm(request.POST, uporabnik=request.user)
+    if form.is_valid():
+        Vnos.objects.create(
+            uporabnik=request.user,
+            tip=Vnos.Tip.POCUTJE,
+            kolicina=form.cleaned_data["ocena"],
+            trening=form.cleaned_data["trening"],
+        )
+    return redirect("casovnica")
+
+
+@login_required
+@require_POST
+def dodaj_tezo(request):
+    form = TezaForm(request.POST)
+    if form.is_valid():
+        Vnos.objects.create(uporabnik=request.user, tip=Vnos.Tip.TEZA, kolicina=form.cleaned_data["teza_kg"])
+    return redirect("casovnica")
+
+
+@login_required
+@require_POST
+def dodaj_komentar(request, sportnik_id):
+    """Trener ali prehranski svetovalec komentira trening ali vnos, ki ga vidi."""
+    sportnik = get_object_or_404(Uporabnik, pk=sportnik_id)
+    form = KomentarForm(request.POST)
+    if sportnik == request.user or not form.is_valid():
+        raise Http404
+    trening = vnos = None
+    if form.cleaned_data["trening"]:
+        trening = get_object_or_404(Trening, pk=form.cleaned_data["trening"], uporabnik=sportnik)
+    else:
+        vnos = get_object_or_404(Vnos, pk=form.cleaned_data["vnos"], uporabnik=sportnik)
+    if not vidi_postavko(vidni_podatki(request.user, sportnik), trening, vnos):
+        raise Http404
+    Komentar.objects.create(
+        avtor=request.user, sportnik=sportnik, trening=trening, vnos=vnos, besedilo=form.cleaned_data["besedilo"]
+    )
+    return redirect("casovnica_sportnika", sportnik_id=sportnik.pk)

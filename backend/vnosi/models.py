@@ -13,6 +13,10 @@ class Vnos(models.Model):
         TEZA = "TEZA", "teža"
 
     uporabnik = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="vnosi")
+    # Počutje je lahko vezano na trening ali na poljuben del dneva.
+    trening = models.ForeignKey(
+        "treningi.Trening", on_delete=models.CASCADE, null=True, blank=True, related_name="vnosi"
+    )
     cas = models.DateTimeField(default=timezone.now)
     tip = models.CharField(max_length=10, choices=Tip)
     kolicina = models.FloatField()
@@ -47,3 +51,29 @@ def cilj_za_dan(sportnik, dan):
         .order_by("-velja_od", "-id")
         .first()
     )
+
+
+class Komentar(models.Model):
+    """Komentar trenerja ali prehranskega svetovalca na trening ali vnos (docs/03).
+
+    Izpolnjeno je natanko eno od polj trening in vnos. Komentar vidi vsak, ki vidi ta vnos.
+    """
+
+    avtor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="napisani_komentarji")
+    sportnik = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="komentarji")
+    trening = models.ForeignKey(
+        "treningi.Trening", on_delete=models.CASCADE, null=True, blank=True, related_name="komentarji"
+    )
+    vnos = models.ForeignKey(Vnos, on_delete=models.CASCADE, null=True, blank=True, related_name="komentarji")
+    besedilo = models.CharField(max_length=500)
+    cas = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["cas"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(trening__isnull=False, vnos__isnull=True)
+                | models.Q(trening__isnull=True, vnos__isnull=False),
+                name="komentar_na_trening_ali_vnos",
+            )
+        ]
