@@ -1,43 +1,75 @@
 {% extends "base.html" %}
+{% load static %}
 {% block naslov %}Treningi{% endblock %}
+{% block meni %}treningi{% endblock %}
 {% block vsebina %}
-<h1>Nov trening</h1>
-<form method="post">
-  {% csrf_token %}
-  {{ serije_formset.management_form }}
-  {% if serije_formset.non_form_errors %}<p class="napaka">Vpiši vsaj eno serijo.</p>{% endif %}
-  <table>
-    <tr><th>Vaja</th><th>Ponovitve</th><th>Teža (kg)</th><th>Odstrani</th></tr>
-    {% for f in serije_formset %}
-    <tr>
-      <td>{{ f.vaja }}</td>
-      <td>{{ f.ponovitve }}</td>
-      <td>{{ f.teza_kg }}</td>
-      <td>{{ f.DELETE }}</td>
-      <td class="napaka">{% for napaka in f.errors.values %}{{ napaka.0 }} {% endfor %}</td>
-    </tr>
-    {% endfor %}
-  </table>
-  {{ trening_form.as_p }}
-  <button type="submit">Shrani trening</button>
-</form>
+<div class="dva-stolpca">
+  <section>
+    <h1>Nov trening</h1>
+    <p class="pod">{% now "j. n. Y · H:i" %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ serije_formset.management_form }}
+      {{ trening_form.non_field_errors }}
+      <div class="oznaka">Vaje</div>
+      {% if serije_formset.non_form_errors %}<p class="napaka">Vpiši vsaj eno serijo.</p>{% endif %}
+      <div class="kartica">
+        <table class="serije-tabela">
+          <thead><tr><th>Serija</th><th>Vaja</th><th>Ponovitve</th><th>Teža (kg)</th><th><span class="sr-only">Odstrani</span></th></tr></thead>
+          <tbody id="serije">
+            {% for f in serije_formset %}
+            <tr class="serija">
+              <td>{{ forloop.counter }}</td>
+              <td>{{ f.vaja }}</td>
+              <td>{{ f.ponovitve }}</td>
+              <td>{{ f.teza_kg }}</td>
+              <td><label class="odstrani">{{ f.DELETE }} ✕ Odstrani</label></td>
+            </tr>
+            {% if f.errors %}<tr><td></td><td colspan="4" class="napaka">{% for napaka in f.errors.values %}{{ napaka.0 }} {% endfor %}</td></tr>{% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+        <button type="button" class="crtkan" id="dodaj-serijo" hidden>+ Dodaj serijo</button>
+      </div>
+      <div class="spodaj">
+        {% include "_polje.html" with polje=trening_form.trajanje_min %}
+        {% include "_polje.html" with polje=trening_form.porabljene_kcal %}
+        <button type="submit" class="glavni desno">Shrani trening</button>
+      </div>
+    </form>
+  </section>
 
-<h2>Pretekli treningi</h2>
-{% for t in pretekli %}
-<section class="trening">
-  <h3>{{ t.zacetek|date:"j. n. Y · H:i" }}</h3>
-  <form method="get" action="{% url 'kopiraj_trening' t.pk %}">
-    <button type="submit">Kopiraj trening</button>
-  </form>
-  <p>{{ t.trajanje_min }} min · {{ t.porabljene_kcal }} kcal</p>
-  {% regroup t.serije.all by vaja as po_vajah %}
-  <ul>
-    {% for v in po_vajah %}
-    <li>{{ v.grouper }}: {% for s in v.list %}{{ s.ponovitve }} × {{ s.teza_kg|floatformat:"-1" }} kg{% if not forloop.last %}, {% endif %}{% endfor %}</li>
+  <section class="pretekli">
+    <h2>Pretekli treningi</h2>
+    {% for t in pretekli %}
+    <article class="kartica trening">
+      <div class="glava">
+        <div>
+          <h3><time datetime="{{ t.zacetek|date:'c' }}" title="{{ t.zacetek|date:'j. n. Y · H:i' }}">{{ t.zacetek|date:"j. n. Y" }}</time>{% if forloop.first %} <span class="znacka">zadnji</span>{% endif %}</h3>
+          <p class="pod">{{ t.trajanje_min }} min · {{ t.porabljene_kcal }} kcal</p>
+        </div>
+        <form method="get" action="{% url 'kopiraj_trening' t.pk %}">
+          <button type="submit">Kopiraj trening</button>
+        </form>
+      </div>
+      {% regroup t.serije.all by vaja as po_vajah %}
+      <ul class="vrstice">
+        {% for v in po_vajah %}
+        {% regroup v.list by ponovitve as po_ponovitvah %}{% regroup v.list by teza_kg as po_tezi %}
+        <li>
+          {# Celoten zapis po serijah ostane za bralnike zaslona; vidno je skrajšano kot na W1. #}
+          <span class="sr-only">{{ v.grouper }}: {% for s in v.list %}{{ s.ponovitve }} × {{ s.teza_kg|floatformat:"-1" }} kg{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+          <span aria-hidden="true">{{ v.grouper }}</span>
+          <span aria-hidden="true" class="stevilke">{% if po_ponovitvah|length == 1 and po_tezi|length == 1 %}{{ v.list|length }} × {{ v.list.0.ponovitve }} · {{ v.list.0.teza_kg|floatformat:"-1" }} kg{% else %}{% for s in v.list %}{{ s.ponovitve }} × {{ s.teza_kg|floatformat:"-1" }} kg{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </article>
+    {% empty %}
+    <p class="pod">Še ni zabeleženih treningov.</p>
     {% endfor %}
-  </ul>
-</section>
-{% empty %}
-<p>Še ni zabeleženih treningov.</p>
-{% endfor %}
+    <button type="button" class="nalozi" id="nalozi-starejse" hidden>Naloži starejše …</button>
+  </section>
+</div>
+<script src="{% static 'js/treningi.js' %}"></script>
 {% endblock %}

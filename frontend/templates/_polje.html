@@ -1,0 +1,6 @@
+<div class="polje">
+  <label for="{{ polje.id_for_label }}">{{ polje.label }}</label>
+  {{ polje }}
+  {% if polje.help_text %}<div class="pomoc">{{ polje.help_text|safe }}</div>{% endif %}
+  {{ polje.errors }}
+</div>

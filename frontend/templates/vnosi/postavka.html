@@ -1,7 +1,8 @@
-{{ p.cas|time:"H:i" }} –
+<span class="cas">{{ p.cas|time:"H:i" }}</span>
+<div>
 {% if p.trening %}
   {% if p.samo_kcal %}trening, porabljene kalorije: {{ p.trening.porabljene_kcal }} kcal
-  {% else %}trening {{ p.trening.trajanje_min }} min · {{ p.trening.porabljene_kcal }} kcal:
+  {% else %}<strong>trening {{ p.trening.trajanje_min }} min · {{ p.trening.porabljene_kcal }} kcal:</strong>
     {% for s in p.trening.serije.all %}{{ s.vaja }} {{ s.ponovitve }} × {{ s.teza_kg|floatformat:"-1" }} kg{% if not forloop.last %}, {% endif %}{% endfor %}
   {% endif %}
 {% elif p.vnos.tip == "VODA" %}voda {{ p.vnos.kolicina|floatformat:0 }} ml
@@ -15,10 +16,11 @@
 </ul>
 {% endif %}
 {% if sportnik != user %}
-<form method="post" action="{% url 'dodaj_komentar' sportnik.pk %}">
+<form method="post" action="{% url 'dodaj_komentar' sportnik.pk %}" class="komentar">
   {% csrf_token %}
   {% if p.trening %}<input type="hidden" name="trening" value="{{ p.trening.pk }}">{% else %}<input type="hidden" name="vnos" value="{{ p.vnos.pk }}">{% endif %}
-  <input type="text" name="besedilo" maxlength="500" required aria-label="Komentar">
-  <button type="submit">Komentiraj</button>
+  <input type="text" name="besedilo" maxlength="500" required aria-label="Komentar" placeholder="Komentar">
+  <button type="submit" class="majhen">Komentiraj</button>
 </form>
 {% endif %}
+</div>

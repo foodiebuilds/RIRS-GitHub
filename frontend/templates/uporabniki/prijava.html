@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 {% block naslov %}Prijava{% endblock %}
 {% block vsebina %}
-<h1>Prijava</h1>
-{% if form.non_field_errors %}<p class="napaka">{{ form.non_field_errors.0 }}</p>{% endif %}
-<form method="post">
-  {% csrf_token %}
-  {{ form.username.label_tag }} {{ form.username }}
-  {{ form.password.label_tag }} {{ form.password }}
-  <button type="submit">Prijava</button>
-</form>
+<div class="kartica ozko">
+  <h1>Prijava</h1>
+  {% if form.non_field_errors %}<p class="napaka">{{ form.non_field_errors.0 }}</p>{% endif %}
+  <form method="post">
+    {% csrf_token %}
+    {% include "_polje.html" with polje=form.username %}
+    {% include "_polje.html" with polje=form.password %}
+    <button type="submit" class="glavni">Prijava</button>
+  </form>
+  <p class="pod">Še nimaš računa? <a href="{% url 'registracija' %}">Registracija</a></p>
+</div>
 {% endblock %}

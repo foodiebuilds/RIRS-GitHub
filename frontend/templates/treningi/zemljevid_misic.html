@@ -1,32 +1,61 @@
 {% extends "base.html" %}
 {% load static %}
 {% block naslov %}Zemljevid mišic{% endblock %}
+{% block meni %}{% if sportnik != user %}sportniki{% else %}statistika{% endif %}{% endblock %}
 {% block vsebina %}
-<h1>Statistika – zemljevid mišic{% if sportnik != user %} – {{ sportnik.ime }}{% endif %}</h1>
+<h1>Statistika{% if sportnik != user %} <span>– zemljevid mišic – {{ sportnik.ime }}</span>{% endif %}</h1>
 
-<p>
-  <a href="?dni=7">7 dni</a> · <a href="?dni=30">30 dni</a>
-</p>
-<form method="get">
-  {{ obdobje_form.non_field_errors }}
-  {{ obdobje_form.od.label_tag }} {{ obdobje_form.od }}
-  {{ obdobje_form.do.label_tag }} {{ obdobje_form.do }}
-  <button type="submit">Prikaži</button>
-</form>
-<p>Obdobje: {{ od|date:"j. n. Y" }} – {{ do|date:"j. n. Y" }}</p>
-
-{% if ni_treningov %}<p class="napaka">V tem obdobju ni zabeleženih treningov</p>{% endif %}
+<div class="zavihki">
+  <span class="aktiven" aria-current="page">Zemljevid mišic</span>
+  <span aria-disabled="true" title="Še ni na voljo">Voda in kalorije</span>
+  <span aria-disabled="true" title="Še ni na voljo">Napredek pri vajah</span>
+</div>
 
 <div class="zemljevid">
-  <div><h2>Spredaj</h2><div id="spredaj"></div></div>
-  <div><h2>Zadaj</h2><div id="zadaj"></div></div>
   <div>
-    <h2>Obremenitev</h2>
-    <p>Lestvica 1 (najmanj) – 10 (največ), sivo: brez treninga v obdobju.</p>
-    <h3>Najbolj obremenjene</h3>
-    <p>{% for m, v in najbolj_obremenjene %}{{ m.ime }} {{ v }}{% if not forloop.last %} · {% endif %}{% empty %}–{% endfor %}</p>
-    <h3>Netrenirane v obdobju</h3>
-    <p>{% for m in netrenirane %}{{ m.ime }}{% if not forloop.last %}, {% endif %}{% empty %}–{% endfor %}</p>
+    <div class="oznaka">Obdobje</div>
+    <div class="izbira">
+      <a class="znacka{% if 'od' not in request.GET and request.GET.dni != '30' %} temna{% endif %}" href="?dni=7">7 dni</a>
+      <a class="znacka{% if 'od' not in request.GET and request.GET.dni == '30' %} temna{% endif %}" href="?dni=30">30 dni</a>
+      <a class="znacka{% if 'od' in request.GET %} temna{% endif %}" href="#id_od">Poljubno</a>
+    </div>
+    <form method="get" id="obdobje" data-od="{{ od|date:'Y-m-d' }}" data-do="{{ do|date:'Y-m-d' }}">
+      {{ obdobje_form.non_field_errors }}
+      {% include "_polje.html" with polje=obdobje_form.od %}
+      {% include "_polje.html" with polje=obdobje_form.do %}
+      <button type="submit">Prikaži</button>
+    </form>
+    <p class="pod">Obdobje: {{ od|date:"j. n. Y" }} – {{ do|date:"j. n. Y" }}</p>
+    {% if ni_treningov %}<p class="napaka">V tem obdobju ni zabeleženih treningov</p>{% endif %}
+  </div>
+
+  <div class="telo"><p class="pod">Spredaj</p><div id="spredaj"></div></div>
+  <div class="telo"><p class="pod">Zadaj</p><div id="zadaj"></div></div>
+
+  <div>
+    <div class="oznaka">Obremenitev</div>
+    {# Barve so iste kot v knjižnici body-muscles (lestvica 1–10, sivo = 0). #}
+    <ul class="lestvica">
+      <li><i style="--b:#7f1d1d"></i>10 (največ)</li>
+      <li><i style="--b:#b91c1c"></i>9</li>
+      <li><i style="--b:#dc2626"></i>8</li>
+      <li><i style="--b:#ef4444"></i>7</li>
+      <li><i style="--b:#ea580c"></i>6</li>
+      <li><i style="--b:#f97316"></i>5</li>
+      <li><i style="--b:#fb923c"></i>4</li>
+      <li><i style="--b:#eab308"></i>3</li>
+      <li><i style="--b:#facc15"></i>2</li>
+      <li><i style="--b:#fde047"></i>1</li>
+      <li><i style="--b:#bfc8d4"></i>brez treninga v obdobju</li>
+    </ul>
+    <div class="kartica">
+      <strong>Najbolj obremenjene</strong>
+      <p>{% for m, v in najbolj_obremenjene %}{{ m.ime }} {{ v }}{% if not forloop.last %} · {% endif %}{% empty %}–{% endfor %}</p>
+    </div>
+    <div class="kartica">
+      <strong>Netrenirane v obdobju</strong>
+      <p>{% for m in netrenirane %}{{ m.ime }}{% if not forloop.last %}, {% endif %}{% empty %}–{% endfor %}</p>
+    </div>
   </div>
 </div>
 
@@ -36,5 +65,8 @@
   const stanje = JSON.parse(document.getElementById("stanje-misic").textContent);
   new BodyMuscles.BodyChart(document.getElementById("spredaj"), { view: BodyMuscles.ViewSide.FRONT, bodyState: stanje });
   new BodyMuscles.BodyChart(document.getElementById("zadaj"), { view: BodyMuscles.ViewSide.BACK, bodyState: stanje });
+  // Polji od–do pokažeta prikazano obdobje tudi pri izbiri 7 ali 30 dni (W2).
+  const obdobje = document.getElementById("obdobje");
+  for (const ime of ["od", "do"]) if (!obdobje.elements[ime].value) obdobje.elements[ime].value = obdobje.dataset[ime];
 </script>
 {% endblock %}

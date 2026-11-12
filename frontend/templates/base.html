@@ -2,29 +2,40 @@
 <html lang="sl">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block naslov %}KarRabimZaGym{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-<body>
-  <nav>
-    <a href="{% url 'domov' %}">KarRabimZaGym</a>
-    {% if user.is_authenticated %}
-      <a href="{% url 'treningi' %}">Treningi</a>
-      <a href="{% url 'prehrana' %}">Prehrana</a>
-      <a href="{% url 'casovnica' %}">Časovnica</a>
-      <a href="{% url 'zemljevid_misic' %}">Statistika</a>
-      <a href="{% url 'moj_dostop' %}">Dostop do mojih podatkov</a>
-      <a href="{% url 'moji_sportniki' %}">Moji športniki</a>
-      {{ user.ime }}
-      <form method="post" action="{% url 'odjava' %}">
-        {% csrf_token %}
-        <button type="submit">Odjava</button>
-      </form>
-    {% else %}
-      <a href="{% url 'prijava' %}">Prijava</a>
-      <a href="{% url 'registracija' %}">Registracija</a>
-    {% endif %}
-  </nav>
+<body data-meni="{% block meni %}{% endblock %}">
+  <header class="vrh">
+    <nav aria-label="Glavni meni">
+      <a class="znamka" href="{% url 'domov' %}">KarRabimZaGym</a>
+      {% if user.is_authenticated %}
+      <ul class="meni">
+        <li data-meni="treningi"><a href="{% url 'treningi' %}">Treningi</a></li>
+        <li data-meni="prehrana"><a href="{% url 'prehrana' %}">Prehrana</a></li>
+        <li data-meni="casovnica"><a href="{% url 'casovnica' %}">Časovnica</a></li>
+        <li data-meni="statistika"><a href="{% url 'zemljevid_misic' %}">Statistika</a></li>
+        <li data-meni="sportniki"><a href="{% url 'moji_sportniki' %}">Moji športniki</a></li>
+      </ul>
+      <details class="uporabnik">
+        <summary>{{ user.ime }} ▾</summary>
+        <div class="spust">
+          <a href="{% url 'moj_dostop' %}">Dostop do mojih podatkov</a>
+          <form method="post" action="{% url 'odjava' %}">
+            {% csrf_token %}
+            <button type="submit">Odjava</button>
+          </form>
+        </div>
+      </details>
+      {% else %}
+      <ul class="meni desno">
+        <li><a href="{% url 'prijava' %}">Prijava</a></li>
+        <li><a href="{% url 'registracija' %}">Registracija</a></li>
+      </ul>
+      {% endif %}
+    </nav>
+  </header>
   <main>
     {% block vsebina %}{% endblock %}
   </main>

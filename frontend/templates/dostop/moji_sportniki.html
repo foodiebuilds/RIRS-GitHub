@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block naslov %}Moji športniki{% endblock %}
+{% block meni %}sportniki{% endblock %}
 {% block vsebina %}
 <h1>Moji športniki</h1>
 
 {% if povabila %}
 <h2>Nova povabila</h2>
-<table>
+<table class="tabela">
+  <tbody>
   {% for d in povabila %}
   <tr>
     <td>{{ d.sportnik.ime }} ({{ d.sportnik.username }})</td>
@@ -13,32 +15,35 @@
     <td>
       <form method="post" action="{% url 'odgovori_na_povabilo' d.pk 'sprejmi' %}">
         {% csrf_token %}
-        <button type="submit">Sprejmi</button>
+        <button type="submit" class="majhen glavni">Sprejmi</button>
       </form>
     </td>
     <td>
       <form method="post" action="{% url 'odgovori_na_povabilo' d.pk 'zavrni' %}">
         {% csrf_token %}
-        <button type="submit">Zavrni</button>
+        <button type="submit" class="majhen">Zavrni</button>
       </form>
     </td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
 {% endif %}
 
 <h2>Športniki, ki so mi dali dostop</h2>
 {% regroup aktivni by sportnik as sportniki %}
-<table>
-  <tr><th>Športnik</th><th>Vrsta dostopa</th><th>Pregled</th></tr>
+<table class="tabela">
+  <thead><tr><th>Športnik</th><th>Vrsta dostopa</th><th>Pregled</th></tr></thead>
+  <tbody>
   {% for s in sportniki %}
   <tr>
     <td><a href="{% url 'casovnica_sportnika' s.grouper.pk %}">{{ s.grouper.ime }} ({{ s.grouper.username }})</a></td>
     <td>{% for d in s.list %}{{ d.get_vrsta_display }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
-    <td>{% for d in s.list %}{% if d.vrsta == "PREHRANSKI_SVETOVALEC" %}<a href="{% url 'prehrana_sportnika' s.grouper.pk %}">Prehrana</a>{% endif %}{% if d.vrsta == "TRENER" %} <a href="{% url 'zemljevid_misic_sportnika' s.grouper.pk %}">Statistika</a>{% endif %}{% endfor %}</td>
+    <td class="povezave">{% for d in s.list %}{% if d.vrsta == "PREHRANSKI_SVETOVALEC" %}<a href="{% url 'prehrana_sportnika' s.grouper.pk %}">Prehrana</a>{% endif %}{% if d.vrsta == "TRENER" %} <a href="{% url 'zemljevid_misic_sportnika' s.grouper.pk %}">Statistika</a>{% endif %}{% endfor %}</td>
   </tr>
   {% empty %}
   <tr><td colspan="3">Noben športnik ti še ni dal dostopa.</td></tr>
   {% endfor %}
+  </tbody>
 </table>
 {% endblock %}

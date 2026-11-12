@@ -1,29 +1,32 @@
 {% extends "base.html" %}
 {% block naslov %}Časovnica{% endblock %}
+{% block meni %}{% if sportnik != user %}sportniki{% else %}casovnica{% endif %}{% endblock %}
 {% block vsebina %}
 <h1>Časovnica{% if sportnik != user %} – {{ sportnik.ime }}{% endif %}</h1>
 
 {% if sportnik == user %}
-<form method="post" action="{% url 'dodaj_pocutje' %}">
-  {% csrf_token %}
-  {{ pocutje_form.as_p }}
-  <button type="submit">Zabeleži počutje</button>
-</form>
-<form method="post" action="{% url 'dodaj_tezo' %}">
-  {% csrf_token %}
-  {{ teza_form.as_p }}
-  <button type="submit">Zabeleži težo</button>
-</form>
+<div class="mreza">
+  <form method="post" action="{% url 'dodaj_pocutje' %}" class="kartica">
+    {% csrf_token %}
+    {% include "_obrazec.html" with form=pocutje_form %}
+    <button type="submit">Zabeleži počutje</button>
+  </form>
+  <form method="post" action="{% url 'dodaj_tezo' %}" class="kartica">
+    {% csrf_token %}
+    {% include "_obrazec.html" with form=teza_form %}
+    <button type="submit">Zabeleži težo</button>
+  </form>
+</div>
 {% endif %}
 
 {% for dan, postavke in dnevi %}
-<h2>{{ dan|date:"l, j. n. Y" }}</h2>
-<ul>
+<h2 class="oznaka">{{ dan|date:"l, j. n. Y" }}</h2>
+<ul class="kartica casovnica">
   {% for p in postavke %}
   <li>{% include "vnosi/postavka.html" %}</li>
   {% endfor %}
 </ul>
 {% empty %}
-<p>Na časovnici še ni vnosov.</p>
+<p class="pod">Na časovnici še ni vnosov.</p>
 {% endfor %}
 {% endblock %}
