@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block naslov %}Prehrana{% endblock %}
+{% block vsebina %}
+<h1>Prehrana{% if sportnik != user %} – {{ sportnik.ime }}{% endif %} – danes</h1>
+<p>Voda: {{ danes.voda }}</p>
+<p>Kalorije: {{ danes.kcal }}</p>
+
+{% if sportnik == user %}
+<form method="post" action="{% url 'dodaj_vodo' %}">
+  {% csrf_token %}
+  <button type="submit">+250 ml</button>
+</form>
+
+<h2>Obrok</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ obrok_form.as_p }}
+  <button type="submit">Dodaj obrok</button>
+</form>
+{% endif %}
+
+<h2>Dnevni cilj</h2>
+{% if cilj %}
+<p>Velja od {{ cilj.velja_od|date:"j. n. Y" }}: {{ cilj.kcal }} kcal, {{ cilj.voda_ml }} ml vode.</p>
+{% else %}
+<p>Cilj še ni nastavljen.</p>
+{% endif %}
+{% if sportnik == user %}
+<form method="post" action="{% url 'nastavi_cilj' %}">
+  {% csrf_token %}
+  {{ cilj_form.as_p }}
+  <button type="submit">Nastavi cilj od danes</button>
+</form>
+{% endif %}
+
+<h2>Današnji vnosi</h2>
+<table>
+  {% for v in vnosi %}
+  <tr>
+    <td>{{ v.cas|time:"H:i" }}</td>
+    <td>{% if v.tip == "VODA" %}voda {{ v.kolicina|floatformat:0 }} ml{% else %}{{ v.opis }}, {{ v.kolicina|floatformat:0 }} kcal{% endif %}</td>
+  </tr>
+  {% empty %}
+  <tr><td>Danes še ni vnosov.</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Pretekli dnevi</h2>
+<table>
+  <tr><th>Dan</th><th>Voda</th><th>Kalorije</th></tr>
+  {% for d in pretekli_dnevi %}
+  <tr><td>{{ d.dan|date:"j. n." }}</td><td>{{ d.voda }}</td><td>{{ d.kcal }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
