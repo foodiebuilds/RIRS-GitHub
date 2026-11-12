@@ -9,11 +9,12 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from dostop.pravice import VSI_PODATKI, vidni_podatki
+from treningi.models import Trening
 from uporabniki.models import Uporabnik
 
-from .casovnica import dnevi_casovnice
-from .forms import CiljForm, ObrokForm, PocutjeForm, TezaForm
-from .models import DnevniCilj, Vnos, cilj_za_dan
+from .casovnica import dnevi_casovnice, vidi_postavko
+from .forms import CiljForm, KomentarForm, ObrokForm, PocutjeForm, TezaForm
+from .models import DnevniCilj, Komentar, Vnos, cilj_za_dan
 
 VODA_GUMB_ML = 250
 PRETEKLI_DNEVI = 7
@@ -164,3 +165,24 @@ def dodaj_tezo(request):
     if form.is_valid():
         Vnos.objects.create(uporabnik=request.user, tip=Vnos.Tip.TEZA, kolicina=form.cleaned_data["teza_kg"])
     return redirect("casovnica")
+
+
+@login_required
+@require_POST
+def dodaj_komentar(request, sportnik_id):
+    """Trener ali prehranski svetovalec komentira trening ali vnos, ki ga vidi."""
+    sportnik = get_object_or_404(Uporabnik, pk=sportnik_id)
+    form = KomentarForm(request.POST)
+    if sportnik == request.user or not form.is_valid():
+        raise Http404
+    trening = vnos = None
+    if form.cleaned_data["trening"]:
+        trening = get_object_or_404(Trening, pk=form.cleaned_data["trening"], uporabnik=sportnik)
+    else:
+        vnos = get_object_or_404(Vnos, pk=form.cleaned_data["vnos"], uporabnik=sportnik)
+    if not vidi_postavko(vidni_podatki(request.user, sportnik), trening, vnos):
+        raise Http404
+    Komentar.objects.create(
+        avtor=request.user, sportnik=sportnik, trening=trening, vnos=vnos, besedilo=form.cleaned_data["besedilo"]
+    )
+    return redirect("casovnica_sportnika", sportnik_id=sportnik.pk)

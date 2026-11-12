@@ -9,3 +9,16 @@
 {% elif p.vnos.tip == "POCUTJE" %}počutje {{ p.vnos.kolicina|floatformat:0 }}/5{% if p.vnos.trening %} (po treningu){% endif %}
 {% else %}teža {{ p.vnos.kolicina|floatformat:"-1" }} kg
 {% endif %}
+{% if p.komentarji %}
+<ul class="komentarji">
+  {% for k in p.komentarji %}<li>{{ k.avtor.ime }}, {{ k.cas|date:"j. n. Y H:i" }}: {{ k.besedilo }}</li>{% endfor %}
+</ul>
+{% endif %}
+{% if sportnik != user %}
+<form method="post" action="{% url 'dodaj_komentar' sportnik.pk %}">
+  {% csrf_token %}
+  {% if p.trening %}<input type="hidden" name="trening" value="{{ p.trening.pk }}">{% else %}<input type="hidden" name="vnos" value="{{ p.vnos.pk }}">{% endif %}
+  <input type="text" name="besedilo" maxlength="500" required aria-label="Komentar">
+  <button type="submit">Komentiraj</button>
+</form>
+{% endif %}

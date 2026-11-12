@@ -1,5 +1,6 @@
 from datetime import datetime, time, timedelta
 
+from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -7,7 +8,7 @@ from dostop.models import Dostop
 from treningi.models import Trening
 from uporabniki.models import Uporabnik
 
-from .models import DnevniCilj, Vnos, cilj_za_dan
+from .models import DnevniCilj, Komentar, Vnos, cilj_za_dan
 
 
 def uporabnik(ime):
@@ -254,3 +255,57 @@ class CasovnicaZaStrokovnjakaTest(TestCase):
     def test_povezava_s_seznama_moji_sportniki(self):
         self.dostop("TRENER")
         self.assertContains(self.client.get("/moji-sportniki/"), f'href="/casovnica/{self.ana.pk}/"')
+
+
+class KomentarjiTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.trener = uporabnik("tomaz")
+        self.svetovalec = uporabnik("sara")
+        Dostop.objects.create(sportnik=self.ana, strokovnjak=self.trener, vrsta="TRENER", status="AKTIVEN")
+        Dostop.objects.create(
+            sportnik=self.ana, strokovnjak=self.svetovalec, vrsta="PREHRANSKI_SVETOVALEC", status="AKTIVEN"
+        )
+        self.trening = Trening.objects.create(uporabnik=self.ana, trajanje_min=60, porabljene_kcal=400)
+        self.obrok = Vnos.objects.create(uporabnik=self.ana, tip="OBROK", kolicina=650, opis="kosilo")
+        self.url = f"/casovnica/{self.ana.pk}/komentar/"
+
+    def komentiraj(self, kdo, besedilo, **postavka):
+        self.client.force_login(kdo)
+        return self.client.post(self.url, {"besedilo": besedilo, **postavka})
+
+    def test_us07_ac4_trener_komentira_trening(self):
+        odgovor = self.komentiraj(self.trener, "Povečaj težo pri počepu.", trening=self.trening.pk)
+        self.assertRedirects(odgovor, f"/casovnica/{self.ana.pk}/")
+        k = Komentar.objects.get()
+        self.assertEqual((k.avtor, k.sportnik, k.trening, k.vnos), (self.trener, self.ana, self.trening, None))
+
+    def test_us07_ac4_komentar_z_avtorjem_vidi_vsak_ki_vidi_vnos(self):
+        self.komentiraj(self.trener, "Povečaj težo pri počepu.", trening=self.trening.pk)
+        self.komentiraj(self.svetovalec, "Dodaj zelenjavo.", vnos=self.obrok.pk)
+        for gledalec, url in [(self.ana, "/casovnica/"), (self.svetovalec, f"/casovnica/{self.ana.pk}/")]:
+            self.client.force_login(gledalec)
+            odgovor = self.client.get(url)
+            self.assertContains(odgovor, "Tomaz, ")  # avtor in čas
+            self.assertContains(odgovor, "Povečaj težo pri počepu.")
+        self.client.force_login(self.trener)
+        self.assertNotContains(self.client.get(f"/casovnica/{self.ana.pk}/"), "Dodaj zelenjavo.")  # obroka ne vidi
+
+    def test_us07_ac4_samo_vnosi_ki_jih_vidi(self):
+        self.assertEqual(self.komentiraj(self.trener, "x", vnos=self.obrok.pk).status_code, 404)
+        self.assertEqual(self.komentiraj(uporabnik("tujec"), "x", trening=self.trening.pk).status_code, 404)
+        tuj = Trening.objects.create(uporabnik=uporabnik("bor"), trajanje_min=30, porabljene_kcal=200)
+        self.assertEqual(self.komentiraj(self.trener, "x", trening=tuj.pk).status_code, 404)  # trening drugega športnika
+        self.assertFalse(Komentar.objects.exists())
+
+    def test_us07_ac5_sportnik_ne_komentira_in_ne_spreminja(self):
+        self.assertEqual(self.komentiraj(self.ana, "x", trening=self.trening.pk).status_code, 404)
+        self.komentiraj(self.trener, "Povečaj težo.", trening=self.trening.pk)
+        self.client.force_login(self.ana)
+        self.assertNotContains(self.client.get("/casovnica/"), "Komentiraj")
+
+    def test_komentar_na_trening_ali_vnos_ne_oboje(self):
+        with self.assertRaises(IntegrityError):
+            Komentar.objects.create(
+                avtor=self.trener, sportnik=self.ana, trening=self.trening, vnos=self.obrok, besedilo="x"
+            )

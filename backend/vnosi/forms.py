@@ -28,3 +28,9 @@ class PocutjeForm(forms.Form):
 
 class TezaForm(forms.Form):
     teza_kg = forms.FloatField(label="Teža (kg)", min_value=1)
+
+
+class KomentarForm(forms.Form):
+    besedilo = forms.CharField(label="Komentar", max_length=500)
+    trening = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    vnos = forms.IntegerField(required=False, widget=forms.HiddenInput)
