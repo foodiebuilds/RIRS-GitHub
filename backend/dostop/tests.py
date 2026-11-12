@@ -45,3 +45,70 @@ class PovabiloTest(TestCase):
         self.assertContains(self.client.get("/dostop/"), "Tomaz (tomaz)")
         self.client.force_login(self.tomaz)
         self.assertNotContains(self.client.get("/dostop/"), "Tomaz (tomaz)")
+
+
+class SprejemInPreklicTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.tomaz = uporabnik("tomaz")
+        self.trener = Dostop.objects.create(sportnik=self.ana, strokovnjak=self.tomaz, vrsta="TRENER")
+        self.svetovalec = Dostop.objects.create(
+            sportnik=self.ana, strokovnjak=self.tomaz, vrsta="PREHRANSKI_SVETOVALEC"
+        )
+
+    def stanje(self, dostop):
+        dostop.refresh_from_db()
+        return dostop.status
+
+    def moji_sportniki(self):
+        self.client.force_login(self.tomaz)
+        return self.client.get("/moji-sportniki/")
+
+    def test_us05_ac2_dokler_ni_sprejeto_ni_na_seznamu(self):
+        odgovor = self.moji_sportniki()
+        self.assertEqual(list(odgovor.context["povabila"]), [self.trener, self.svetovalec])
+        self.assertEqual(list(odgovor.context["aktivni"]), [])
+
+    def test_us05_ac2_zavrnitev(self):
+        self.client.force_login(self.tomaz)
+        self.client.post(f"/moji-sportniki/povabilo/{self.trener.pk}/zavrni/")
+        self.assertEqual(self.stanje(self.trener), "PREKLICAN")
+
+    def test_us05_ac3_po_sprejemu_na_seznamu_moji_sportniki(self):
+        self.client.force_login(self.tomaz)
+        for d in (self.trener, self.svetovalec):
+            self.client.post(f"/moji-sportniki/povabilo/{d.pk}/sprejmi/")
+            self.assertEqual(self.stanje(d), "AKTIVEN")
+        odgovor = self.moji_sportniki()
+        self.assertContains(odgovor, "Ana (ana)")
+        self.assertContains(odgovor, "prehranski svetovalec, trener")
+
+    def test_us05_ac5_po_preklicu_ni_vec_na_seznamu(self):
+        Dostop.objects.update(status="AKTIVEN")
+        self.client.force_login(self.ana)
+        for d in (self.trener, self.svetovalec):
+            self.assertRedirects(self.client.post(f"/dostop/{d.pk}/preklici/"), "/dostop/")
+            self.assertEqual(self.stanje(d), "PREKLICAN")
+        self.assertNotContains(self.moji_sportniki(), "Ana (ana)")
+
+    def test_samo_povabljeni_odgovori_in_samo_sportnik_preklice(self):
+        tujec = uporabnik("tujec")
+        self.client.force_login(tujec)
+        self.assertEqual(self.client.post(f"/moji-sportniki/povabilo/{self.trener.pk}/sprejmi/").status_code, 404)
+        self.assertEqual(self.client.post(f"/dostop/{self.trener.pk}/preklici/").status_code, 404)
+        self.client.force_login(self.tomaz)
+        self.assertEqual(self.client.post(f"/dostop/{self.trener.pk}/preklici/").status_code, 404)
+        self.assertEqual(self.stanje(self.trener), "POVABLJEN")
+
+    def test_neznan_odgovor_na_povabilo_ne_spremeni_nicesar(self):
+        self.client.force_login(self.tomaz)
+        self.assertEqual(self.client.post(f"/moji-sportniki/povabilo/{self.trener.pk}/xyz/").status_code, 404)
+        self.assertEqual(self.stanje(self.trener), "POVABLJEN")
+
+    def test_po_preklicu_lahko_znova_povabi(self):
+        self.trener.status = "PREKLICAN"
+        self.trener.save()
+        self.client.force_login(self.ana)
+        odgovor = self.client.post("/dostop/", {"uporabnisko_ime": "tomaz", "vrsta": "TRENER"})
+        self.assertRedirects(odgovor, "/dostop/")
+        self.assertEqual(Dostop.objects.filter(vrsta="TRENER", status="POVABLJEN").count(), 1)

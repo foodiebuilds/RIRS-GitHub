@@ -12,15 +12,21 @@
 
 <h2>Kdo ima dostop</h2>
 <table>
-  <tr><th>Uporabnik</th><th>Vrsta dostopa</th><th>Stanje</th></tr>
+  <tr><th>Uporabnik</th><th>Vrsta dostopa</th><th>Stanje</th><th></th></tr>
   {% for d in dostopi %}
   <tr>
     <td>{{ d.strokovnjak.ime }} ({{ d.strokovnjak.username }})</td>
     <td>{{ d.get_vrsta_display }}</td>
     <td>{{ d.get_status_display }}</td>
+    <td>
+      <form method="post" action="{% url 'preklici_dostop' d.pk %}">
+        {% csrf_token %}
+        <button type="submit">Prekliči</button>
+      </form>
+    </td>
   </tr>
   {% empty %}
-  <tr><td colspan="3">Nihče nima dostopa.</td></tr>
+  <tr><td colspan="4">Nihče nima dostopa.</td></tr>
   {% endfor %}
 </table>
 {% endblock %}
