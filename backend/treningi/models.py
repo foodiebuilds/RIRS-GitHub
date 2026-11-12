@@ -12,6 +12,10 @@ class Misica(models.Model):
 
     ime = models.CharField(max_length=50, unique=True)
     pogled = models.CharField(max_length=10, choices=Pogled)
+    # Mišična skupina na sliki obsega več delov telesa iz knjižnice body-muscles.
+    oznake = models.CharField(
+        max_length=500, blank=True, help_text="Oznake mišic v knjižnici body-muscles, ločene z vejico."
+    )
 
     class Meta:
         verbose_name = "mišica"

@@ -1,5 +1,7 @@
+import re
 from datetime import datetime, time, timedelta
 
+from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
@@ -202,3 +204,67 @@ class ObremenitevMisicTest(TestCase):
         self.trening(self.potisk, 2)
         VajaMisica.objects.filter(misica=self.triceps).update(tip="GLAVNA")
         self.assertEqual(self.obremenitev()[self.triceps], 10)
+
+
+class ZemljevidMisicStranTest(TestCase):
+    fixtures = ["zacetni_podatki"]
+
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.client.force_login(self.ana)
+        self.danes = timezone.localdate()
+
+    def trening(self, ime_vaje, st_serij, dan):
+        zacetek = timezone.make_aware(datetime.combine(dan, time(10, 0)))
+        t = Trening.objects.create(uporabnik=self.ana, zacetek=zacetek, trajanje_min=60, porabljene_kcal=400)
+        vaja = Vaja.objects.get(ime=ime_vaje)
+        for st in range(1, st_serij + 1):
+            Serija.objects.create(trening=t, vaja=vaja, zaporedna_st=st, ponovitve=8, teza_kg=60)
+
+    def test_oznake_misic_obstajajo_v_knjiznici(self):
+        pot = settings.FRONTEND_DIR / "static/js/body-muscles/body-muscles.umd.min.js"
+        oznake_knjiznice = set(re.findall(r'id:"([a-z-]+)"', pot.read_text(encoding="utf-8")))
+        uporabljene = [o for m in Misica.objects.all() for o in m.oznake.split(",")]
+        self.assertEqual(len(uporabljene), len(set(uporabljene)))  # nobena oznaka ni v dveh skupinah
+        self.assertLessEqual(set(uporabljene), oznake_knjiznice)
+
+    def test_us03_ac1_stran_s_pogledom_spredaj_in_zadaj(self):
+        Misica.objects.filter(ime="prsa").update(oznake="chest-upper-left, chest-upper-right")  # presledek iz admina
+        self.trening("Potisk s prsi", 4, self.danes)
+        odgovor = self.client.get("/statistika/misice/")
+        self.assertContains(odgovor, 'id="spredaj"')
+        self.assertContains(odgovor, 'id="zadaj"')
+        stanje = odgovor.context["stanje"]
+        self.assertEqual(stanje["chest-upper-left"], {"intensity": 10, "selected": False})
+        self.assertEqual(stanje["chest-upper-right"]["intensity"], 10)
+        self.assertEqual(stanje["triceps-long-right"]["intensity"], 5)
+        self.assertNotIn("quads-left", stanje)  # netrenirana mišica ostane siva
+
+    def test_us03_ac3_netrenirane_so_nastete(self):
+        self.trening("Potisk s prsi", 4, self.danes)
+        odgovor = self.client.get("/statistika/misice/")
+        imena = [m.ime for m in odgovor.context["netrenirane"]]
+        self.assertIn("kvadriceps", imena)
+        self.assertNotIn("prsa", imena)
+        self.assertEqual([(m.ime, v) for m, v in odgovor.context["najbolj_obremenjene"]][0], ("prsa", 10))
+
+    def test_us03_ac4_privzeto_7_dni_lahko_30_ali_od_do(self):
+        self.trening("Počep", 3, self.danes - timedelta(days=10))
+        odgovor = self.client.get("/statistika/misice/")
+        self.assertEqual((odgovor.context["od"], odgovor.context["do"]), (self.danes - timedelta(days=6), self.danes))
+        self.assertNotIn("quads-left", odgovor.context["stanje"])
+        self.assertIn("quads-left", self.client.get("/statistika/misice/?dni=30").context["stanje"])
+        dan = self.danes - timedelta(days=10)
+        odgovor = self.client.get(f"/statistika/misice/?od={dan.isoformat()}&do={dan.isoformat()}")
+        self.assertEqual(odgovor.context["od"], dan)
+        self.assertIn("quads-left", odgovor.context["stanje"])
+
+    def test_napacno_obdobje_obdrzi_privzeto(self):
+        odgovor = self.client.get(f"/statistika/misice/?od={self.danes.isoformat()}&do={(self.danes - timedelta(days=3)).isoformat()}")
+        self.assertContains(odgovor, "mora biti pred datumom")
+        self.assertEqual(odgovor.context["od"], self.danes - timedelta(days=6))
+
+    def test_us03_ac5_brez_treningov_sporocilo(self):
+        odgovor = self.client.get("/statistika/misice/")
+        self.assertContains(odgovor, "V tem obdobju ni zabeleženih treningov")
+        self.assertEqual(odgovor.context["stanje"], {})
