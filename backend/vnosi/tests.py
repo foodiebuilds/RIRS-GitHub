@@ -108,3 +108,11 @@ class NapredekDoCiljaTest(TestCase):
         cas = timezone.make_aware(datetime.combine(self.danes, time(0, 30)))
         Vnos.objects.create(uporabnik=self.ana, tip="VODA", kolicina=250, cas=cas)
         self.assertContains(self.client.get("/prehrana/"), "Voda: 0,25 l (cilj ni nastavljen)")
+
+
+class StranPrehranaTest(TestCase):
+    def test_meni_in_naslov_prehrana_kot_na_wireframih(self):
+        self.client.force_login(uporabnik("ana"))
+        odgovor = self.client.get("/prehrana/")
+        self.assertContains(odgovor, "<title>Prehrana</title>", html=True)
+        self.assertContains(odgovor, '<a href="/prehrana/">Prehrana</a>', html=True)

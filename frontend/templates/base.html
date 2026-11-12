@@ -9,7 +9,7 @@
   <nav>
     <a href="{% url 'domov' %}">KarRabimZaGym</a>
     {% if user.is_authenticated %}
-      <a href="{% url 'prehrana' %}">Voda in obroki</a>
+      <a href="{% url 'prehrana' %}">Prehrana</a>
       <a href="{% url 'moj_dostop' %}">Dostop do mojih podatkov</a>
       <a href="{% url 'moji_sportniki' %}">Moji športniki</a>
       {{ user.ime }}
