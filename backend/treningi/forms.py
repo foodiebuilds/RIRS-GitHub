@@ -17,4 +17,5 @@ class SerijaForm(forms.Form):
 
 
 # Prazne vrstice se ne shranijo; vsaj ena serija je obvezna.
-SerijaFormSet = forms.formset_factory(SerijaForm, extra=8, min_num=1, validate_min=True)
+# Pri kopiranem treningu lahko serijo odstraniš s kljukico »Odstrani«.
+SerijaFormSet = forms.formset_factory(SerijaForm, extra=8, min_num=1, validate_min=True, can_delete=True)

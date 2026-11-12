@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from uporabniki.models import Uporabnik
 
-from .models import Misica, Trening, Vaja, VajaMisica
+from .models import Misica, Serija, Trening, Vaja, VajaMisica
 
 
 def uporabnik(ime):
@@ -102,3 +102,49 @@ class PretekliTreningiTest(TestCase):
         drugi = Trening.objects.create(uporabnik=self.ana, trajanje_min=50, porabljene_kcal=350)
         Trening.objects.create(uporabnik=uporabnik("tomaz"), trajanje_min=99, porabljene_kcal=999)
         self.assertEqual(list(self.client.get("/treningi/").context["pretekli"]), [drugi, prvi])
+
+
+class KopirajTreningTest(TestCase):
+    fixtures = ["zacetni_podatki"]
+
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.client.force_login(self.ana)
+        pocep = Vaja.objects.get(ime="Počep")
+        self.dvig = Vaja.objects.get(ime="Dvig bokov")
+        self.vzor = Trening.objects.create(uporabnik=self.ana, trajanje_min=55, porabljene_kcal=380)
+        for st, (vaja, ponovitve, teza) in enumerate([(pocep, 8, 80), (pocep, 8, 80), (self.dvig, 10, 60)], 1):
+            Serija.objects.create(trening=self.vzor, vaja=vaja, zaporedna_st=st, ponovitve=ponovitve, teza_kg=teza)
+
+    def test_us02_ac3_gumb_pri_vsakem_preteklem_treningu(self):
+        drugi = Trening.objects.create(uporabnik=self.ana, trajanje_min=30, porabljene_kcal=200)
+        odgovor = self.client.get("/treningi/")
+        for t in (self.vzor, drugi):
+            self.assertContains(odgovor, f'action="/treningi/kopiraj/{t.pk}/"')
+
+    def test_us02_ac3_obrazec_je_izpolnjen_s_kopijo(self):
+        odgovor = self.client.get(f"/treningi/kopiraj/{self.vzor.pk}/")
+        formset = odgovor.context["serije_formset"]
+        self.assertEqual(
+            [(f.initial["vaja"], f.initial["ponovitve"], f.initial["teza_kg"]) for f in formset.initial_forms],
+            [(s.vaja_id, s.ponovitve, s.teza_kg) for s in self.vzor.serije.all()],
+        )
+        self.assertEqual(odgovor.context["trening_form"].initial["trajanje_min"], 55)
+        self.assertEqual(Trening.objects.count(), 1)  # nov trening nastane šele ob shranjevanju
+
+    def test_us02_ac3_popravljene_stevilke_in_odstranjena_serija(self):
+        podatki = podatki_treninga([], trajanje="60", kcal="400")
+        podatki["serije-INITIAL_FORMS"] = "3"
+        for i, s in enumerate(self.vzor.serije.all()):
+            podatki.update({f"serije-{i}-vaja": s.vaja_id, f"serije-{i}-ponovitve": s.ponovitve, f"serije-{i}-teza_kg": s.teza_kg})
+        podatki["serije-1-teza_kg"] = "85"  # popravljena teža
+        podatki["serije-2-DELETE"] = "on"  # odstranjena serija
+        self.assertRedirects(self.client.post(f"/treningi/kopiraj/{self.vzor.pk}/", podatki), "/treningi/")
+        nov = Trening.objects.exclude(pk=self.vzor.pk).get()
+        self.assertEqual((nov.trajanje_min, nov.porabljene_kcal), (60, 400))
+        self.assertEqual(list(nov.serije.values_list("ponovitve", "teza_kg")), [(8, 80.0), (8, 85.0)])
+        self.assertEqual(self.vzor.serije.count(), 3)  # vzor ostane nespremenjen
+
+    def test_tujega_treninga_ni_mogoce_kopirati(self):
+        self.client.force_login(uporabnik("tomaz"))
+        self.assertEqual(self.client.get(f"/treningi/kopiraj/{self.vzor.pk}/").status_code, 404)

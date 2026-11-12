@@ -7,12 +7,13 @@
   {{ serije_formset.management_form }}
   {% if serije_formset.non_form_errors %}<p class="napaka">Vpiši vsaj eno serijo.</p>{% endif %}
   <table>
-    <tr><th>Vaja</th><th>Ponovitve</th><th>Teža (kg)</th></tr>
+    <tr><th>Vaja</th><th>Ponovitve</th><th>Teža (kg)</th><th>Odstrani</th></tr>
     {% for f in serije_formset %}
     <tr>
       <td>{{ f.vaja }}</td>
       <td>{{ f.ponovitve }}</td>
       <td>{{ f.teza_kg }}</td>
+      <td>{{ f.DELETE }}</td>
       <td class="napaka">{% for napaka in f.errors.values %}{{ napaka.0 }} {% endfor %}</td>
     </tr>
     {% endfor %}
@@ -25,6 +26,9 @@
 {% for t in pretekli %}
 <section class="trening">
   <h3>{{ t.zacetek|date:"j. n. Y · H:i" }}</h3>
+  <form method="get" action="{% url 'kopiraj_trening' t.pk %}">
+    <button type="submit">Kopiraj trening</button>
+  </form>
   <p>{{ t.trajanje_min }} min · {{ t.porabljene_kcal }} kcal</p>
   {% regroup t.serije.all by vaja as po_vajah %}
   <ul>
