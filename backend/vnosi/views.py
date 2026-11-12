@@ -3,9 +3,13 @@ from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Q, Sum
-from django.shortcuts import redirect, render
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
+from dostop.pravice import vidni_podatki
+from uporabniki.models import Uporabnik
 
 from .forms import CiljForm, ObrokForm
 from .models import DnevniCilj, Vnos, cilj_za_dan
@@ -43,6 +47,18 @@ def pregled_dneva(sportnik, dan):
     }
 
 
+def podatki_prehrane(sportnik):
+    """Današnji vnosi vode in obrokov, veljavni cilj, napredek danes in zadnjih 7 dni."""
+    danes = timezone.localdate()
+    return {
+        "sportnik": sportnik,
+        "vnosi": sportnik.vnosi.filter(tip__in=[Vnos.Tip.VODA, Vnos.Tip.OBROK], cas__date=danes).order_by("cas"),
+        "cilj": cilj_za_dan(sportnik, danes),
+        "danes": pregled_dneva(sportnik, danes),
+        "pretekli_dnevi": [pregled_dneva(sportnik, danes - timedelta(days=i)) for i in range(1, PRETEKLI_DNEVI + 1)],
+    }
+
+
 @login_required
 def prehrana(request):
     """Voda in obroki za danes; obrazec za obrok."""
@@ -55,22 +71,22 @@ def prehrana(request):
             opis=obrok_form.cleaned_data["opis"],
         )
         return redirect("prehrana")
-    danes = timezone.localdate()
-    vnosi = request.user.vnosi.filter(tip__in=[Vnos.Tip.VODA, Vnos.Tip.OBROK], cas__date=danes).order_by("cas")
     return render(
         request,
         "vnosi/prehrana.html",
-        {
-            "vnosi": vnosi,
-            "obrok_form": obrok_form,
-            "cilj": cilj_za_dan(request.user, danes),
-            "danes": pregled_dneva(request.user, danes),
-            "pretekli_dnevi": [
-                pregled_dneva(request.user, danes - timedelta(days=i)) for i in range(1, PRETEKLI_DNEVI + 1)
-            ],
-            "cilj_form": CiljForm(),
-        },
+        {**podatki_prehrane(request.user), "obrok_form": obrok_form, "cilj_form": CiljForm()},
     )
+
+
+@login_required
+def prehrana_sportnika(request, sportnik_id):
+    """Pregled prehrane športnika za prehranskega svetovalca (samo branje, US-05 AC4)."""
+    sportnik = get_object_or_404(Uporabnik, pk=sportnik_id)
+    if sportnik == request.user:
+        return redirect("prehrana")
+    if "cilji" not in vidni_podatki(request.user, sportnik):
+        raise Http404
+    return render(request, "vnosi/prehrana.html", podatki_prehrane(sportnik))
 
 
 @login_required

@@ -3,6 +3,7 @@ from datetime import datetime, time, timedelta
 from django.test import TestCase
 from django.utils import timezone
 
+from dostop.models import Dostop
 from uporabniki.models import Uporabnik
 
 from .models import DnevniCilj, Vnos, cilj_za_dan
@@ -116,3 +117,33 @@ class StranPrehranaTest(TestCase):
         odgovor = self.client.get("/prehrana/")
         self.assertContains(odgovor, "<title>Prehrana</title>", html=True)
         self.assertContains(odgovor, '<a href="/prehrana/">Prehrana</a>', html=True)
+
+
+class PrehranaZaSvetovalcaTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.sara = uporabnik("sara")
+        self.danes = timezone.localdate()
+        DnevniCilj.objects.create(
+            sportnik=self.ana, avtor=self.ana, kcal=2200, voda_ml=2500, velja_od=self.danes, status="AKTIVEN"
+        )
+        Vnos.objects.create(uporabnik=self.ana, tip="VODA", kolicina=1500)
+        self.client.force_login(self.sara)
+
+    def dostop(self, vrsta):
+        Dostop.objects.create(sportnik=self.ana, strokovnjak=self.sara, vrsta=vrsta, status="AKTIVEN")
+
+    def test_us05_ac4_svetovalec_vidi_cilj_in_napredek(self):
+        self.dostop("PREHRANSKI_SVETOVALEC")
+        odgovor = self.client.get(f"/prehrana/{self.ana.pk}/")
+        self.assertContains(odgovor, "1,5 l od 2,5 l, manjka 1 l")
+        self.assertContains(odgovor, "2200 kcal, 2500 ml vode")
+        self.assertNotContains(odgovor, "Nastavi cilj od danes")  # samo branje
+        self.assertNotContains(odgovor, "+250 ml")
+        self.assertContains(self.client.get("/moji-sportniki/"), f'href="/prehrana/{self.ana.pk}/"')
+
+    def test_us05_ac4_trener_in_brez_dostopa_ne_vidita(self):
+        self.assertEqual(self.client.get(f"/prehrana/{self.ana.pk}/").status_code, 404)
+        self.dostop("TRENER")
+        self.assertEqual(self.client.get(f"/prehrana/{self.ana.pk}/").status_code, 404)
+        self.assertNotContains(self.client.get("/moji-sportniki/"), f'href="/prehrana/{self.ana.pk}/"')
