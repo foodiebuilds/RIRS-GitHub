@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block naslov %}Časovnica{% endblock %}
+{% block vsebina %}
+<h1>Časovnica</h1>
+
+<form method="post" action="{% url 'dodaj_pocutje' %}">
+  {% csrf_token %}
+  {{ pocutje_form.as_p }}
+  <button type="submit">Zabeleži počutje</button>
+</form>
+<form method="post" action="{% url 'dodaj_tezo' %}">
+  {% csrf_token %}
+  {{ teza_form.as_p }}
+  <button type="submit">Zabeleži težo</button>
+</form>
+
+<ul>
+  {% for v in vnosi %}
+  <li>{{ v.cas|date:"j. n. Y H:i" }} – {% if v.tip == "POCUTJE" %}počutje {{ v.kolicina|floatformat:0 }}/5{% if v.trening %} (po treningu){% endif %}{% else %}teža {{ v.kolicina|floatformat:"-1" }} kg{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

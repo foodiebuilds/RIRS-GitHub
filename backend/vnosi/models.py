@@ -13,6 +13,10 @@ class Vnos(models.Model):
         TEZA = "TEZA", "teža"
 
     uporabnik = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="vnosi")
+    # Počutje je lahko vezano na trening ali na poljuben del dneva.
+    trening = models.ForeignKey(
+        "treningi.Trening", on_delete=models.CASCADE, null=True, blank=True, related_name="vnosi"
+    )
     cas = models.DateTimeField(default=timezone.now)
     tip = models.CharField(max_length=10, choices=Tip)
     kolicina = models.FloatField()

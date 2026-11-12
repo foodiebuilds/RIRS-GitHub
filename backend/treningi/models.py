@@ -68,6 +68,9 @@ class Trening(models.Model):
     porabljene_kcal = models.PositiveIntegerField()
     opomba = models.CharField(max_length=200, blank=True)
 
+    def __str__(self):
+        return f"trening {timezone.localtime(self.zacetek):%d. %m. %Y %H:%M}"
+
 
 class Serija(models.Model):
     """Ena serija vaje na treningu (docs/03)."""

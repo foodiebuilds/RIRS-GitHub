@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from dostop.models import Dostop
+from treningi.models import Trening
 from uporabniki.models import Uporabnik
 
 from .models import DnevniCilj, Vnos, cilj_za_dan
@@ -147,3 +148,32 @@ class PrehranaZaSvetovalcaTest(TestCase):
         self.dostop("TRENER")
         self.assertEqual(self.client.get(f"/prehrana/{self.ana.pk}/").status_code, 404)
         self.assertNotContains(self.client.get("/moji-sportniki/"), f'href="/prehrana/{self.ana.pk}/"')
+
+
+class PocutjeInTezaTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.client.force_login(self.ana)
+
+    def test_us07_ac1_pocutje_za_del_dneva(self):
+        self.assertRedirects(self.client.post("/casovnica/pocutje/", {"ocena": "4"}), "/casovnica/")
+        v = Vnos.objects.get()
+        self.assertEqual((v.uporabnik, v.tip, v.kolicina, v.trening), (self.ana, "POCUTJE", 4, None))
+
+    def test_us07_ac1_pocutje_za_trening(self):
+        t = Trening.objects.create(uporabnik=self.ana, trajanje_min=60, porabljene_kcal=400)
+        self.client.post("/casovnica/pocutje/", {"ocena": "5", "trening": t.pk})
+        self.assertEqual(Vnos.objects.get().trening, t)
+
+    def test_us07_ac1_ocena_od_1_do_5_in_samo_svoj_trening(self):
+        tuj = Trening.objects.create(uporabnik=uporabnik("tomaz"), trajanje_min=60, porabljene_kcal=400)
+        self.client.post("/casovnica/pocutje/", {"ocena": "6"})
+        self.client.post("/casovnica/pocutje/", {"ocena": "0"})
+        self.client.post("/casovnica/pocutje/", {"ocena": "3", "trening": tuj.pk})
+        self.assertFalse(Vnos.objects.exists())
+
+    def test_us07_ac1_teza_v_kg(self):
+        self.client.post("/casovnica/teza/", {"teza_kg": "78.5"})
+        v = Vnos.objects.get()
+        self.assertEqual((v.tip, v.kolicina), ("TEZA", 78.5))
+        self.assertContains(self.client.get("/casovnica/"), "teža 78,5 kg")

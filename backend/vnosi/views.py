@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from dostop.pravice import vidni_podatki
 from uporabniki.models import Uporabnik
 
-from .forms import CiljForm, ObrokForm
+from .forms import CiljForm, ObrokForm, PocutjeForm, TezaForm
 from .models import DnevniCilj, Vnos, cilj_za_dan
 
 VODA_GUMB_ML = 250
@@ -113,3 +113,37 @@ def nastavi_cilj(request):
                 status=DnevniCilj.Status.AKTIVEN,
             )
     return redirect("prehrana")
+
+
+@login_required
+def casovnica(request):
+    """Časovnica: vnos počutja in teže ter seznam teh vnosov."""
+    vnosi = request.user.vnosi.filter(tip__in=[Vnos.Tip.POCUTJE, Vnos.Tip.TEZA]).order_by("-cas")
+    return render(
+        request,
+        "vnosi/casovnica.html",
+        {"vnosi": vnosi, "pocutje_form": PocutjeForm(uporabnik=request.user), "teza_form": TezaForm()},
+    )
+
+
+@login_required
+@require_POST
+def dodaj_pocutje(request):
+    form = PocutjeForm(request.POST, uporabnik=request.user)
+    if form.is_valid():
+        Vnos.objects.create(
+            uporabnik=request.user,
+            tip=Vnos.Tip.POCUTJE,
+            kolicina=form.cleaned_data["ocena"],
+            trening=form.cleaned_data["trening"],
+        )
+    return redirect("casovnica")
+
+
+@login_required
+@require_POST
+def dodaj_tezo(request):
+    form = TezaForm(request.POST)
+    if form.is_valid():
+        Vnos.objects.create(uporabnik=request.user, tip=Vnos.Tip.TEZA, kolicina=form.cleaned_data["teza_kg"])
+    return redirect("casovnica")
