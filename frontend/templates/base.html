@@ -6,6 +6,18 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
+  <nav>
+    <a href="{% url 'domov' %}">KarRabimZaGym</a>
+    {% if user.is_authenticated %}
+      {{ user.ime }}
+      <form method="post" action="{% url 'odjava' %}">
+        {% csrf_token %}
+        <button type="submit">Odjava</button>
+      </form>
+    {% else %}
+      <a href="{% url 'prijava' %}">Prijava</a>
+    {% endif %}
+  </nav>
   <main>
     {% block vsebina %}{% endblock %}
   </main>

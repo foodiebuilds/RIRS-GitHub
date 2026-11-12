@@ -52,6 +52,15 @@ INSTALLED_APPS = [
 # Lasten model uporabnika, nastavljen pred prvo migracijo (docs/03).
 AUTH_USER_MODEL = "uporabniki.Uporabnik"
 
+# Prijava z uporabniškim imenom (ModelBackend) ali z e-pošto (US-01).
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "uporabniki.backends.PrijavaZEposto",
+]
+LOGIN_URL = "prijava"
+LOGIN_REDIRECT_URL = "domov"
+LOGOUT_REDIRECT_URL = "prijava"
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
