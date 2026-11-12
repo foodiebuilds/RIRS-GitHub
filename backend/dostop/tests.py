@@ -3,6 +3,7 @@ from django.test import TestCase
 from uporabniki.models import Uporabnik
 
 from .models import Dostop
+from .pravice import VSI_PODATKI, vidni_podatki
 
 
 def uporabnik(ime):
@@ -112,3 +113,43 @@ class SprejemInPreklicTest(TestCase):
         odgovor = self.client.post("/dostop/", {"uporabnisko_ime": "tomaz", "vrsta": "TRENER"})
         self.assertRedirects(odgovor, "/dostop/")
         self.assertEqual(Dostop.objects.filter(vrsta="TRENER", status="POVABLJEN").count(), 1)
+
+
+class PraviceTest(TestCase):
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.tomaz = uporabnik("tomaz")
+
+    def dostop(self, vrsta, status="AKTIVEN"):
+        return Dostop.objects.create(sportnik=self.ana, strokovnjak=self.tomaz, vrsta=vrsta, status=status)
+
+    def test_lastnik_vidi_vse(self):
+        self.assertEqual(vidni_podatki(self.ana, self.ana), VSI_PODATKI)
+
+    def test_us05_ac4_trener(self):
+        self.dostop("TRENER")
+        self.assertEqual(vidni_podatki(self.tomaz, self.ana), {"treningi", "plani", "pocutje", "teza"})
+
+    def test_us05_ac4_prehranski_svetovalec(self):
+        self.dostop("PREHRANSKI_SVETOVALEC")
+        self.assertEqual(
+            vidni_podatki(self.tomaz, self.ana), {"voda", "obroki", "kcal_treningov", "cilji", "pocutje", "teza"}
+        )
+
+    def test_us05_ac4_trener_in_svetovalec(self):
+        self.dostop("TRENER")
+        self.dostop("PREHRANSKI_SVETOVALEC")
+        self.assertEqual(vidni_podatki(self.tomaz, self.ana), VSI_PODATKI)
+
+    def test_us05_ac2_pred_sprejemom_nic(self):
+        self.dostop("TRENER", status="POVABLJEN")
+        self.assertEqual(vidni_podatki(self.tomaz, self.ana), set())
+
+    def test_us05_ac5_po_preklicu_nic(self):
+        self.dostop("TRENER", status="PREKLICAN")
+        self.assertEqual(vidni_podatki(self.tomaz, self.ana), set())
+
+    def test_brez_dostopa_nic_in_dostop_ne_velja_obratno(self):
+        self.dostop("TRENER")
+        self.assertEqual(vidni_podatki(uporabnik("tujec"), self.ana), set())
+        self.assertEqual(vidni_podatki(self.ana, self.tomaz), set())
