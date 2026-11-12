@@ -80,3 +80,25 @@ class VnosTreningaTest(TestCase):
     def test_us02_ac5_samo_vaje_s_seznama(self):
         self.client.post("/treningi/", podatki_treninga([(9999, "8", "80")]))
         self.assertFalse(Trening.objects.exists())
+
+
+class PretekliTreningiTest(TestCase):
+    fixtures = ["zacetni_podatki"]
+
+    def setUp(self):
+        self.ana = uporabnik("ana")
+        self.client.force_login(self.ana)
+        self.pocep = Vaja.objects.get(ime="Počep")
+
+    def test_us02_ac4_shranjen_trening_je_na_seznamu(self):
+        serije = [(self.pocep.pk, "8", "80"), (self.pocep.pk, "8", "82.5")]
+        self.client.post("/treningi/", podatki_treninga(serije, trajanje="55", kcal="380"))
+        odgovor = self.client.get("/treningi/")
+        self.assertContains(odgovor, "55 min · 380 kcal")
+        self.assertContains(odgovor, "Počep: 8 × 80 kg, 8 × 82,5 kg")
+
+    def test_novejsi_najprej_in_samo_svoji(self):
+        prvi = Trening.objects.create(uporabnik=self.ana, trajanje_min=40, porabljene_kcal=300)
+        drugi = Trening.objects.create(uporabnik=self.ana, trajanje_min=50, porabljene_kcal=350)
+        Trening.objects.create(uporabnik=uporabnik("tomaz"), trajanje_min=99, porabljene_kcal=999)
+        self.assertEqual(list(self.client.get("/treningi/").context["pretekli"]), [drugi, prvi])

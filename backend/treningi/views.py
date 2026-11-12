@@ -8,7 +8,7 @@ from .models import Serija
 
 @login_required
 def treningi(request):
-    """Vnos novega treninga z vajami in serijami."""
+    """Vnos novega treninga z vajami in serijami ter seznam preteklih treningov."""
     trening_form = TreningForm(request.POST or None)
     serije_formset = SerijaFormSet(request.POST or None, prefix="serije")
     if request.method == "POST" and trening_form.is_valid() and serije_formset.is_valid():
@@ -20,6 +20,9 @@ def treningi(request):
             for st, vrstica in enumerate(vrstice, start=1):
                 Serija.objects.create(trening=trening, zaporedna_st=st, **vrstica)
         return redirect("treningi")
+    pretekli = request.user.treningi.order_by("-zacetek", "-id").prefetch_related("serije__vaja")
     return render(
-        request, "treningi/treningi.html", {"trening_form": trening_form, "serije_formset": serije_formset}
+        request,
+        "treningi/treningi.html",
+        {"trening_form": trening_form, "serije_formset": serije_formset, "pretekli": pretekli},
     )

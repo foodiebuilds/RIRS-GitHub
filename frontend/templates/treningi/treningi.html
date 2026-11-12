@@ -20,4 +20,20 @@
   {{ trening_form.as_p }}
   <button type="submit">Shrani trening</button>
 </form>
+
+<h2>Pretekli treningi</h2>
+{% for t in pretekli %}
+<section class="trening">
+  <h3>{{ t.zacetek|date:"j. n. Y · H:i" }}</h3>
+  <p>{{ t.trajanje_min }} min · {{ t.porabljene_kcal }} kcal</p>
+  {% regroup t.serije.all by vaja as po_vajah %}
+  <ul>
+    {% for v in po_vajah %}
+    <li>{{ v.grouper }}: {% for s in v.list %}{{ s.ponovitve }} × {{ s.teza_kg|floatformat:"-1" }} kg{% if not forloop.last %}, {% endif %}{% endfor %}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% empty %}
+<p>Še ni zabeleženih treningov.</p>
+{% endfor %}
 {% endblock %}
